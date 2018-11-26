@@ -20,13 +20,20 @@ indent_mode=2
 [project]
 name=cluf
 base_path=/home/me/projects/cluf/
+description=
+file_patterns=
 
 [long line marker]
 long_line_behaviour=1
 long_line_column=72
 
 [files]
-current_page=0
+current_page=2
+FILE_NAME_0=151;C;0;EUTF-8;0;1;0;%2Fhome%2Fme%2Fprojects%2Fcluf%2Fcluf.c;0;2
+FILE_NAME_1=84;C++;0;EUTF-8;0;1;0;%2Fhome%2Fme%2Fprojects%2Fcluf%2Fcluf.h;0;2
+FILE_NAME_2=93;C;0;EUTF-8;0;1;0;%2Fhome%2Fme%2Fprojects%2Fcluf%2Fcluf_setup.c;0;2
+FILE_NAME_3=97;Make;0;EUTF-8;1;1;0;%2Fhome%2Fme%2Fprojects%2Fcluf%2Fmakefile;0;2
+FILE_NAME_4=553;Make;0;EUTF-8;1;1;0;%2Fhome%2Fme%2Fprojects%2Fcunit-run%2Fmakefile;0;2
 
 [VTE]
 last_dir=/home/me/projects/cunit-run

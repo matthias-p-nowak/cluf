@@ -1,16 +1,20 @@
 SRCS=$(wildcard *.c)
 OBJS=$(SRCS:.c=.o)
-HDRS=$(wildcard *.h)
-GCHS=$(HDRS:.h=.h.gch)
 
 CFLAGS=-g -H
+
+all: cluf
+
+
+cluf: $(OBJS)
+	@echo new $<
+	$(CC) $(CFLAGS) -o $@ $(OBJS)
 
 %.h.gch: %.h
 	$(CC) $(CFLAGS) -o $@ $^
 	
-cluf: $(GCHS) $(OBJS)
-	@echo new $<
-	$(CC) $(CFLAGS) -o $@ $(OBJS)
+HDRS=$(wildcard *.h)
+$(OBJS): $(HDRS:.h=.h.gch)
 
 clean:
 	rm -f *.o cluf *.gch
