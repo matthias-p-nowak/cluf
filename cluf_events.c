@@ -22,7 +22,7 @@ void handle_event(const struct fanotify_event_metadata *metadata){
     perror("fstat failed");
     exit(EXIT_FAILURE);
   }
-  if(_cluf.debug>1){
+  if(_cluf.debug>4){
     printf("mask: %llu %s %s%s\n",metadata->mask,
       path2, _cluf.destDir, path2+_cluf.srcLen);
     if(metadata->mask & FAN_ACCESS)
@@ -41,16 +41,24 @@ void handle_event(const struct fanotify_event_metadata *metadata){
       printf("EOC ");
     printf("\n");
   }
+  if(metadata->mask & FAN_OPEN){
+    if(_cluf.fanotifyFile)
+      fprintf(_cluf.fanotifyFile,"%s\n",path2);
+    cluf_copyFile(path2,metadata->fd);
+  }
+  
     if(S_ISDIR(statbuf.st_mode))
     {
       if(_cluf.debug>1){
         printf("got a directory\n");
+        // TODO: update symlinks in that directory
       }
+      
     }
   close(metadata->fd);
 }
 
-void handle_events () {
+void handle_events() {
   /**
    *
    */
@@ -61,7 +69,7 @@ void handle_events () {
   printf("start handling events\n");
   my_pid=getpid();
   for(;;) {
-    if(_cluf.debug>3)
+    if(_cluf.debug>6)
       printf("another round\n");
     len = read(_cluf.fanotifyFD, (void *) &buf, sizeof(buf));
     if (len == -1 && errno != EAGAIN) {
@@ -84,11 +92,12 @@ void handle_events () {
         exit(EXIT_FAILURE);
       }
       if(metadata->pid==my_pid){
-        close(metadata->fd);
+        // ignore - it's me
       }
       else 
         handle_event(metadata);
-        
+      // must close the metadata->fd
+      close(metadata->fd);
     }
   }
 }

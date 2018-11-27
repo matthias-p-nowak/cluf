@@ -90,6 +90,7 @@ int main(int argc, char **argv) {
 // add signal handler
     signal(SIGTERM, handle_signal);
     signal(SIGQUIT,handle_signal);
+// *************************
     cluf_setup(srcDir, recFile);
 // *************************
     if (daemonMode) {
