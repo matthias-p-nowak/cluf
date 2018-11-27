@@ -25,21 +25,21 @@
 
   CU_pSuite pSuite = NULL;
 
-void run_cunit_suite(char *name, int (*init)(),int(*clean)()){
-  if(!CU_get_registry()){
-  /* initialize the CUnit test registry */
-  if (CUE_SUCCESS != CU_initialize_registry ()) 
-  {
-    perror("no CUnit initalization");
-    exit(EXIT_FAILURE);
+void run_cunit_suite(char *name, int (*init)(),int(*clean)()) {
+  if(!CU_get_registry()) {
+    /* initialize the CUnit test registry */
+    if (CUE_SUCCESS != CU_initialize_registry ())
+    {
+      perror("no CUnit initalization");
+      exit(EXIT_FAILURE);
+    }
   }
   pSuite = CU_add_suite (name, init, clean);
   if (NULL == pSuite)
-	 {
-     perror("Test suite registration failed");
-   }
- }
- return;
+  {
+    perror("Test suite registration failed");
+  }
+  return;
 }
 
   void reg_cunit_test(char *name, void (*funct)()){
@@ -114,8 +114,8 @@ main (int argc, char **argv)
   CU_automated_run_tests ();
   // CU_list_tests_to_file ();
 	 }
-
+  int ret=0;
+  fprintf(stderr,"numbers of failed tests: %d\n", ret=CU_get_number_of_tests_failed());
   CU_cleanup_registry ();
-  return CU_get_error ();
-
+  return ret;
 }

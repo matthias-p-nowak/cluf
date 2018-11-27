@@ -7,16 +7,25 @@
 
 #include "cluf.h"
 
-
-
-void cluf_setup(char* srcDir, char* recFile) {
-  /**
-   * carries out the setup with the given functions
-   */
-  if (srcDir == NULL) {
+void cluf_setup_1() {
+  if(_cluf.sourceName==NULL) {
     fprintf(stderr, "no source directory given\n");
     exit(EXIT_FAILURE);
   }
+  _cluf.sourceLen=strlen(_cluf.sourceName);
+  if(_cluf.targetName)
+    _cluf.targetLen=strlen(_cluf.targetName);
+  else {
+    if(_cluf.debug>1)
+      fprintf(stderr,"no destination directory, just watching\n");
+  }
+}
+
+void cluf_setup(char* recFile) {
+  /**
+   * carries out the setup with the given functions
+   */
+  
   // *************************
   if(_cluf.debug>2)
     printf("setting up watched filesystem\n");
@@ -28,14 +37,13 @@ void cluf_setup(char* srcDir, char* recFile) {
   if (fanotify_mark(_cluf.fanotifyFD,
                     FAN_MARK_ADD | FAN_MARK_MOUNT,
                     FAN_CLOSE | FAN_ACCESS | FAN_MODIFY | FAN_OPEN | FAN_ONDIR,
-                    AT_FDCWD, srcDir) == -1) {
+                    AT_FDCWD, _cluf.sourceName) == -1) {
     perror("fanotify_mark");
     exit(EXIT_FAILURE);
   }
-  _cluf.srcLen=strlen(srcDir);
   // *************************
   if(_cluf.destDir){
-    cluf_symlink(srcDir);
+    cluf_symlink(_cluf.sourceName);
   }
   // *************************
   if(recFile) {

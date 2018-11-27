@@ -82,16 +82,16 @@ int main(int argc, char **argv) {
             runArg[j] = argv[i];
         }
         if (argc > 1)
-            srcDir = runArg[0];
+            _cluf.sourceName = runArg[0];
         if (argc > 2)
-            _cluf.destDir = runArg[1];
+            _cluf.targetName = runArg[1];
     }
 // *************************
 // add signal handler
     signal(SIGTERM, handle_signal);
     signal(SIGQUIT,handle_signal);
 // *************************
-    cluf_setup(srcDir, recFile);
+    cluf_setup(recFile);
 // *************************
     if (daemonMode) {
         if (fork()) {
