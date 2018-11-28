@@ -49,7 +49,8 @@ void reg_cunit_test(char *name, void (*funct)()) {
    */
   if(!pSuite) {
     // make sure that at least one suite was registered
-    cluf_exit("no test suite registered\n");
+    perror("no test suite registered\n");
+    exit(EXIT_FAILURE);
   }
   if(!CU_add_test(pSuite,name, funct)) {
     fprintf(stderr,"adding %s failed with %d\n",name,CU_get_error());
@@ -98,7 +99,8 @@ main (int argc, char **argv)
 
   if (CUE_SUCCESS != CU_initialize_registry ())
   {
-    cluf_exit("no CUnit initalization");
+    perror("no CUnit initalization");
+    exit(EXIT_FAILURE);
   }
 /*
  * running.inc contains macros that are transformed into function calls for registering suites and tests
