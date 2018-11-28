@@ -13,15 +13,11 @@ void cluf_symlink(char *srcDir) {
     fprintf(stderr,"making symlings %s -> %s\n",srcDir,destPath);
   }
   DIR *srcD=opendir(srcDir);
-  if(!srcD) {
-    perror("open source dir for symlink");
-    exit(EXIT_FAILURE);
-  }
+  if(!srcD)
+    cluf_exit("open source dir for symlink");
   int destFd=open(destPath,O_RDONLY);
-  if(destFd<=0) {
-    perror("open dest dir for symlink");
-    exit(EXIT_FAILURE);
-  }
+  if(destFd<=0)
+    cluf_exit("open dest dir for symlink");
   if(cluf_same(dirfd(srcD),destFd))
   {
     if(_cluf.debug>2)
@@ -38,7 +34,7 @@ void cluf_symlink(char *srcDir) {
     if(_cluf.debug>3)
       fprintf(stderr,"making symlink for %s\n",dirent->d_name);
     strcpy(destPath+srcLen,dirent->d_name);
-    if(symlinkat(destPath,destFd,dirent->d_name)){
+    if(symlinkat(destPath,destFd,dirent->d_name)) {
       perror(destPath);
     }
   }

@@ -23,24 +23,21 @@ void cluf_setup(char* recFile) {
   /**
    * carries out the setup with the given functions
    */
-  
+
   // *************************
   if(_cluf.debug>2)
     printf("setting up watched filesystem\n");
   _cluf.fanotifyFD = fanotify_init(FAN_CLOEXEC | FAN_CLASS_PRE_CONTENT, O_RDONLY);
   if (_cluf.fanotifyFD == -1) {
-    perror("fanotify_init");
-    exit(EXIT_FAILURE);
+    cluf_exit("fanotify_init");
   }
   if (fanotify_mark(_cluf.fanotifyFD,
                     FAN_MARK_ADD | FAN_MARK_MOUNT,
                     FAN_CLOSE | FAN_ACCESS | FAN_MODIFY | FAN_OPEN | FAN_ONDIR,
-                    AT_FDCWD, _cluf.sourceName) == -1) {
-    perror("fanotify_mark");
-    exit(EXIT_FAILURE);
-  }
+                    AT_FDCWD, _cluf.sourceName) == -1) 
+    cluf_exit("fanotify_mark");
   // *************************
-  if(_cluf.destDir){
+  if(_cluf.destDir) {
     cluf_symlink(_cluf.sourceName);
   }
   // *************************

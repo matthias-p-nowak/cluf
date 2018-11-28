@@ -3,10 +3,8 @@
 #include "cluf.h"
 
 int cluf_source2target(char *in, char *out){
-  if(!_cluf.targetName){
-    fprintf(stderr,"programming error 2018-11-27/1\n");
-    exit(EXIT_FAILURE);
-  }
+  if(!_cluf.targetName)
+  cluf_exit("programming error 2018-11-27/1");
   // if(in[_cluf.sourceLen]=='/')
     snprintf(out,PATH_MAX,"%s%s",_cluf.targetName,in+_cluf.sourceLen);
   // else

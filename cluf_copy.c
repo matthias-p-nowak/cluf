@@ -90,8 +90,7 @@ void cluf_copyFile(char* source, int fd) {
   struct stat sb;
   if(fstat(fd,&sb))
   {
-    perror("can't stat the source file");
-    exit(EXIT_FAILURE);
+    cluf_exit("can't stat the source file");
   }
   snprintf(srcPath,PATH_MAX,"%sXXXXXX",destPath);
   int fd2=mkstemp(srcPath);
@@ -100,21 +99,17 @@ void cluf_copyFile(char* source, int fd) {
   while(0< ( rr=read(fd,buf,BUFMAX))){
     rw=write(fd2,buf,rr);
     if(rw != rr){
-      perror("file copying");
-      exit(EXIT_FAILURE);
+      cluf_exit("file copying");
     }
   }
   close(fd2);
   if(chown(srcPath,sb.st_uid,sb.st_gid)){
-    perror("changin owner");
-    exit(EXIT_FAILURE);
+    cluf_exit("changin owner");
   }
   if(chmod(srcPath,sb.st_mode)){
-    perror("changing file mode");
-    exit(EXIT_FAILURE);
+    cluf_exit("changing file mode");
   }
   if(rename(srcPath,destPath)){
-    perror("error in final file symlink rename");
-    exit(EXIT_FAILURE);
+    cluf_exit("error in final file symlink rename");
   }
 }

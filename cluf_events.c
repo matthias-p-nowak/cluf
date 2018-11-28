@@ -6,25 +6,23 @@
 #include "cluf.h"
 
 
-void handle_event(const struct fanotify_event_metadata *metadata){
+void handle_event(const struct fanotify_event_metadata *metadata) {
   char path1[PATH_MAX];
   char path2[PATH_MAX];
   struct stat statbuf;
   snprintf(path1, sizeof(path1),"/proc/self/fd/%d", metadata->fd);
   int len = readlink(path1, path2,sizeof(path1) - 1);
-  if(len==-1){
-    fprintf(stderr,"failed link for readlink\n");
-    exit(EXIT_FAILURE);
+  if(len==-1) {
+    cluf_exit("failed link for readlink");
   }
   path2[len]='\0';
   int ret=fstat(metadata->fd, &statbuf);
-  if(ret<0){
-    perror("fstat failed");
-    exit(EXIT_FAILURE);
+  if(ret<0) {
+    cluf_exit("fstat failed");
   }
-  if(_cluf.debug>4){
+  if(_cluf.debug>4) {
     printf("mask: %llu %s %s%s\n",metadata->mask,
-      path2, _cluf.destDir, path2+_cluf.srcLen);
+           path2, _cluf.destDir, path2+_cluf.srcLen);
     if(metadata->mask & FAN_ACCESS)
       printf("A ");
     if(metadata->mask & FAN_MODIFY)
@@ -41,20 +39,20 @@ void handle_event(const struct fanotify_event_metadata *metadata){
       printf("EOC ");
     printf("\n");
   }
-  if(metadata->mask & FAN_OPEN){
+  if(metadata->mask & FAN_OPEN) {
     if(_cluf.fanotifyFile)
       fprintf(_cluf.fanotifyFile,"%s\n",path2);
     cluf_copyFile(path2,metadata->fd);
   }
-  
-    if(S_ISDIR(statbuf.st_mode))
-    {
-      if(_cluf.debug>1){
-        printf("got a directory\n");
-        // TODO: update symlinks in that directory
-      }
-      
+
+  if(S_ISDIR(statbuf.st_mode))
+  {
+    if(_cluf.debug>1) {
+      printf("got a directory\n");
+      // TODO: update symlinks in that directory
     }
+
+  }
   close(metadata->fd);
 }
 
@@ -73,28 +71,24 @@ void handle_events() {
       printf("another round\n");
     len = read(_cluf.fanotifyFD, (void *) &buf, sizeof(buf));
     if (len == -1 && errno != EAGAIN) {
-      perror("reading from fanotify fd");
-      exit(EXIT_FAILURE);
+      cluf_exit("reading from fanotify fd");
     }
     if(len<=0) {
-      fprintf(stderr,"end of fanotify events");
-      exit(EXIT_FAILURE);
+      cluf_exit("end of fanotify events");
     }
-    /* Point to the first event in the buffer */    
-    for (metadata = buf;FAN_EVENT_OK(metadata, len);
-      metadata = FAN_EVENT_NEXT(metadata, len)) {
+    /* Point to the first event in the buffer */
+    for (metadata = buf; FAN_EVENT_OK(metadata, len);
+         metadata = FAN_EVENT_NEXT(metadata, len)) {
       if (metadata->vers != FANOTIFY_METADATA_VERSION) {
-        fprintf(stderr,"Mismatch of fanotify metadata version.\n");
-          exit(EXIT_FAILURE);
+        cluf_exit("Mismatch of fanotify metadata version.");
       }
-      if(metadata->fd ==FAN_NOFD){
-        perror("fanotify queue overflow");
-        exit(EXIT_FAILURE);
+      if(metadata->fd ==FAN_NOFD) {
+        cluf_exit("fanotify queue overflow");
       }
-      if(metadata->pid==my_pid){
+      if(metadata->pid==my_pid) {
         // ignore - it's me
       }
-      else 
+      else
         handle_event(metadata);
       // must close the metadata->fd
       close(metadata->fd);
