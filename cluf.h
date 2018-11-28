@@ -32,10 +32,11 @@ int cluf_same(int fd1, int fd2);
 void cluf_copyFile(char* dest, int fd);
 void cluf_setup(char* recFile);
 void cluf_setup_1();
-void cluf_symlink(char *srcDir);
+void cluf_makeSymlinks(char *srcDir);
 int cluf_source2target(char *in, char *out);
 int cluf_target2source(char *in, char *out);
 int cluf_source2shortened(char *in, char *out);
+int cluf_source2shortened2(char *in, char *entry, char *out);
 void handle_events();
 void cluf_exit(char *msg);
 

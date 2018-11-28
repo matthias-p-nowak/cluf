@@ -11,11 +11,23 @@ void cluf_setup_1() {
   if(_cluf.sourceName==NULL)
     cluf_exit("no source directory given");
   _cluf.sourceLen=strlen(_cluf.sourceName);
-  if(_cluf.targetName)
+  while((_cluf.sourceLen>0)&& (_cluf.sourceName[_cluf.sourceLen-1]=='/'))
+    _cluf.sourceName[--_cluf.sourceLen]='\0';
+  
+  if(_cluf.targetName){
     _cluf.targetLen=strlen(_cluf.targetName);
+  while((_cluf.targetLen>0)&& (_cluf.targetName[_cluf.targetLen-1]=='/'))
+    _cluf.targetName[--_cluf.targetLen]='\0';
+  }
   else {
     if(_cluf.debug>1)
       fprintf(stderr,"no destination directory, just watching\n");
+  }
+  if(_cluf.shortenLinks){
+    if(strstr(_cluf.sourceName,_cluf.targetName)==NULL){
+      // the target is not part of the source
+      cluf_exit("shortening of symlinks not possible due to setup");
+    }
   }
 }
 
@@ -38,7 +50,7 @@ void cluf_setup(char* recFile) {
     cluf_exit("fanotify_mark");
   // *************************
   if(_cluf.destDir) {
-    cluf_symlink(_cluf.sourceName);
+    cluf_makeSymlinks(_cluf.sourceName);
   }
   // *************************
   if(recFile) {

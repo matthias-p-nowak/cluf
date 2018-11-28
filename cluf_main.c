@@ -21,92 +21,105 @@ void print_usage(char *progname) {
          "	-f <record file>    record all encountered accessed to that file\n"
          "	-d                  after initialization, start daemon mode\n"
          "	-v                  increase verbosity\n"
+         "	-p <pid file>       record pid into that file\n"
          "	-t                  silly test option\n\n"
          "\n", progname, progname);
   exit(EXIT_SUCCESS);
 }
 
-void handle_signal(int signal){
+void handle_signal(int signal) {
   /**
-   * 
+   *
    */
   fprintf(stderr, "shutting down cluf\n");
   exit(EXIT_SUCCESS);
 }
 
-void cluf_exit(char *msg){
+void cluf_exit(char *msg) {
   perror(msg);
   exit(EXIT_FAILURE);
 }
 
+void record_pid(char *pidFile) {
+  fprintf(stderr,"pid=%d\n",getpid());
+  FILE *f=fopen(pidFile,"w");
+  if(!f)
+    cluf_exit("file couldn't be opened");
+  fprintf(f,"%d",getpid());
+  fclose(f);
+}
+
 int main(int argc, char **argv) {
-    /**
-     *
-     */
-    // initializing the global structure
-    memset(&_cluf,0,sizeof(_cluf));
+  /**
+   *
+   */
+  // initializing the global structure
+  memset(&_cluf,0,sizeof(_cluf));
 // *************************
-    if (argc <= 1) {
+  if (argc <= 1) {
+    print_usage(argv[0]);
+  }
+  char *srcDir = NULL;
+  int daemonMode = 0;
+  char *recFile = NULL;
+  {
+    int opt;
+    while ((opt = getopt(argc, argv, "dtvp:f:")) != -1) {
+      switch (opt) {
+      case 'd':
+        daemonMode = 1;
+        if(_cluf.debug>0)
+          fprintf(stderr,"setting debug mode\n");
+        break;
+      case 't':
+        fprintf(stderr, "testing options\n");
+        break;
+      case 'v':
+        ++_cluf.debug;
+        fprintf(stderr,"setting verbose to %d\n",_cluf.debug);
+        break;
+      case 'f':
+        recFile = optarg;
+        if(_cluf.debug>0)
+          fprintf(stderr,"setting recording file to %s\n",recFile);
+        break;
+      case 'p':
+        record_pid(optarg);
+        break;
+      default:
         print_usage(argv[0]);
+      }
     }
-    char *srcDir = NULL;
-    int daemonMode = 0;
-    char *recFile = NULL;
-    {
-        int opt;
-        while ((opt = getopt(argc, argv, "dtvf:")) != -1) {
-            switch (opt) {
-            case 'd':
-                daemonMode = 1;
-                if(_cluf.debug>0)
-                  fprintf(stderr,"setting debug mode\n");
-                break;
-            case 't':
-                fprintf(stderr, "testing options\n");
-                break;
-            case 'v':
-                ++_cluf.debug;
-                fprintf(stderr,"setting verbose to %d\n",_cluf.debug);
-                break;
-            case 'f':
-                recFile = optarg;
-                if(_cluf.debug>0)
-                  fprintf(stderr,"setting recording file to %s\n",recFile);
-                break;
-            default:
-                print_usage(argv[0]);
-            }
-        }
-        char * runArg[argc];
-        for (int i = 0; i < argc; ++i)
-            runArg[i] = NULL;
-        for (int i = optind, j = 0; i < argc; ++i, ++j) {
-            if(_cluf.debug>3)
-                fprintf(stderr, "argv[%d]=%s\n", i, argv[i]);
-            runArg[j] = argv[i];
-        }
-        if (argc > 1)
-            _cluf.sourceName = runArg[0];
-        if (argc > 2)
-            _cluf.targetName = runArg[1];
+    char * runArg[argc];
+    for (int i = 0; i < argc; ++i)
+      runArg[i] = NULL;
+    for (int i = optind, j = 0; i < argc; ++i, ++j) {
+      if(_cluf.debug>3)
+        fprintf(stderr, "argv[%d]=%s\n", i, argv[i]);
+      runArg[j] = argv[i];
     }
+    if (argc > 1)
+      _cluf.sourceName = runArg[0];
+    if (argc > 2)
+      _cluf.targetName = runArg[1];
+  }
 // *************************
 // add signal handler
-    signal(SIGTERM, handle_signal);
-    signal(SIGQUIT,handle_signal);
+  signal(SIGTERM, handle_signal);
+  signal(SIGQUIT,handle_signal);
 // *************************
-    cluf_setup(recFile);
+  cluf_setup(recFile);
 // *************************
-    if (daemonMode) {
-        if (fork()) {
-            if(_cluf.debug>0)
-                fprintf(stderr, "daemon started\n");
-            exit(EXIT_SUCCESS);
-        }
+  if (daemonMode) {
+    if (fork()) {
+      if(_cluf.debug>0)
+        fprintf(stderr, "daemon started\n");
+      exit(EXIT_SUCCESS);
     }
+  }
 // *************************
-    handle_events();
-    if(_cluf.debug>0)
-        printf("all done\n");
-    exit(EXIT_SUCCESS);
+  handle_events();
+  if(_cluf.debug>0)
+    printf("all done\n");
+  exit(EXIT_SUCCESS);
 }

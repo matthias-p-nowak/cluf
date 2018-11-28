@@ -6,38 +6,39 @@
 
 #include "cluf.h"
 
-void cluf_symlink(char *srcDir) {
-  char destPath[PATH_MAX];
-  snprintf(destPath,PATH_MAX,"%s%s",_cluf.destDir,srcDir+_cluf.srcLen);
+void cluf_makeSymlinks(char *sourceDirName) {
+  char targetPath[PATH_MAX]; // the target as seen by this program
+  cluf_source2target(sourceDirName,targetPath);
   if(_cluf.debug>2) {
-    fprintf(stderr,"making symlings %s -> %s\n",srcDir,destPath);
+    fprintf(stderr,"making symlings %s -> %s\n",sourceDirName,targetPath);
   }
-  DIR *srcD=opendir(srcDir);
-  if(!srcD)
+  DIR *sourceDir=opendir(sourceDirName);
+  if(!sourceDir)
     cluf_exit("open source dir for symlink");
-  int destFd=open(destPath,O_RDONLY);
-  if(destFd<=0)
+  int target_fd=open(targetPath,O_RDONLY);
+  if(target_fd<=0)
     cluf_exit("open dest dir for symlink");
-  if(cluf_same(dirfd(srcD),destFd))
+  if(cluf_same(dirfd(sourceDir),target_fd))
   {
     if(_cluf.debug>2)
       fprintf(stderr,"same directories in symlink\n");
-    close(destFd);
-    closedir(srcD);
+    close(target_fd);
+    closedir(sourceDir);
     return;
   }
-  int srcLen=snprintf(destPath,PATH_MAX,"%s/",srcDir);
+  // int srcLen=snprintf(targetPath,PATH_MAX,"%s/",sourceDirName);
   struct dirent *dirent;
-  while(dirent=readdir(srcD)) {
+  while(dirent=readdir(sourceDir)) {
     if(!strcmp(dirent->d_name,".")||(!strcmp(dirent->d_name,"..")))
       continue;
     if(_cluf.debug>3)
       fprintf(stderr,"making symlink for %s\n",dirent->d_name);
-    strcpy(destPath+srcLen,dirent->d_name);
-    if(symlinkat(destPath,destFd,dirent->d_name)) {
-      perror(destPath);
+    if(cluf_source2shortened2(sourceDirName,dirent->d_name,targetPath))
+    if(symlinkat(targetPath,target_fd,dirent->d_name)) {
+      perror(targetPath);
     }
   }
-  close(destFd);
-  closedir(srcD);
+  close(target_fd);
+  closedir(sourceDir);
 }
+

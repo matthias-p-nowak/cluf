@@ -7,22 +7,24 @@
 
 
 void handle_event(const struct fanotify_event_metadata *metadata) {
-  char path1[PATH_MAX];
-  char path2[PATH_MAX];
+  char procFileName[PATH_MAX];
+  char openedFileName[PATH_MAX];
   struct stat statbuf;
-  snprintf(path1, sizeof(path1),"/proc/self/fd/%d", metadata->fd);
-  int len = readlink(path1, path2,sizeof(path1) - 1);
+  snprintf(procFileName, sizeof(procFileName),"/proc/self/fd/%d", metadata->fd);
+  int len = readlink(procFileName, openedFileName,sizeof(procFileName) - 1);
   if(len==-1) {
     cluf_exit("failed link for readlink");
   }
-  path2[len]='\0';
+  openedFileName[len]='\0';
   int ret=fstat(metadata->fd, &statbuf);
   if(ret<0) {
     cluf_exit("fstat failed");
   }
   if(_cluf.debug>4) {
+    char targetFN[PATH_MAX];
+    cluf_source2target(openedFileName,targetFN);
     printf("mask: %llu %s %s%s\n",metadata->mask,
-           path2, _cluf.destDir, path2+_cluf.srcLen);
+           openedFileName, _cluf.destDir, targetFN);
     if(metadata->mask & FAN_ACCESS)
       printf("A ");
     if(metadata->mask & FAN_MODIFY)
@@ -41,17 +43,17 @@ void handle_event(const struct fanotify_event_metadata *metadata) {
   }
   if(metadata->mask & FAN_OPEN) {
     if(_cluf.fanotifyFile)
-      fprintf(_cluf.fanotifyFile,"%s\n",path2);
-    cluf_copyFile(path2,metadata->fd);
+      fprintf(_cluf.fanotifyFile,"%s\n",openedFileName);
+    cluf_copyFile(openedFileName,metadata->fd);
   }
 
   if(S_ISDIR(statbuf.st_mode))
   {
     if(_cluf.debug>1) {
-      printf("got a directory\n");
+      printf("got a directory %s\n",openedFileName);
       // TODO: update symlinks in that directory
     }
-
+    cluf_makeSymlinks(openedFileName);
   }
   close(metadata->fd);
 }

@@ -61,30 +61,33 @@ void cluf_createDir(char *destPath,char *srcPath) {
   }
 }
 
-void cluf_copyFile(char* source, int fd) {
-  char destPath[PATH_MAX];
+void cluf_copyFile(char* sourceFilePath, int fd) {
+  /**
+   * function copies the file 
+   */
+  char targetPath[PATH_MAX];
   char srcPath[PATH_MAX];
-  int destLen=snprintf(destPath,PATH_MAX,"%s%s",_cluf.destDir,source+_cluf.srcLen);
+  int destLen=snprintf(targetPath,PATH_MAX,"%s%s",_cluf.destDir,sourceFilePath+_cluf.srcLen);
   if(_cluf.debug>2)
-    fprintf(stderr,"copying to %s\n",destPath);
+    fprintf(stderr,"copying to %s\n",targetPath);
   // have to check immediate directories, shouldn't be symbolic
   int corr=_cluf.srcLen-strlen(_cluf.destDir);
   for(int i=_cluf.srcLen+1; i<destLen; ++i) {
-    if(destPath[i]=='/') {
-      destPath[i]='\0';
+    if(targetPath[i]=='/') {
+      targetPath[i]='\0';
       if(_cluf.debug>3)
-        fprintf(stderr,"testing %s\n",destPath);
+        fprintf(stderr,"testing %s\n",targetPath);
       struct stat sb;
-      if(lstat(destPath,&sb)) {
+      if(lstat(targetPath,&sb)) {
         cluf_exit("testing directory for being a symbolic link");
       }
       if(S_ISLNK(sb.st_mode)) {
-        strncpy(srcPath,source,i-corr);
+        strncpy(srcPath,sourceFilePath,i-corr);
         if(_cluf.debug>3)
-          fprintf(stderr,"replace %s <- %s\n",destPath,srcPath);
-        cluf_createDir(destPath,srcPath);
+          fprintf(stderr,"replace %s <- %s\n",targetPath,srcPath);
+        cluf_createDir(targetPath,srcPath);
       }
-      destPath[i]='/';
+      targetPath[i]='/';
     }
   }
   struct stat sb;
@@ -92,7 +95,7 @@ void cluf_copyFile(char* source, int fd) {
   {
     cluf_exit("can't stat the source file");
   }
-  snprintf(srcPath,PATH_MAX,"%sXXXXXX",destPath);
+  snprintf(srcPath,PATH_MAX,"%sXXXXXX",targetPath);
   int fd2=mkstemp(srcPath);
   char buf[BUFMAX];
   ssize_t rr,rw;
@@ -109,7 +112,7 @@ void cluf_copyFile(char* source, int fd) {
   if(chmod(srcPath,sb.st_mode)){
     cluf_exit("changing file mode");
   }
-  if(rename(srcPath,destPath)){
+  if(rename(srcPath,targetPath)){
     cluf_exit("error in final file symlink rename");
   }
 }
