@@ -7,7 +7,11 @@
 
 #include "run_cunit.h"
 
-
+/**
+ * we need declarations of functions that are defined in the test_*.c files
+ * the macros are retrieved by the makefile into running.inc
+ * here we use makros to make function definitions
+ */
 #undef CUNIT_SUITE
 #define CUNIT_SUITE(name, init, clean) \
     int init(); \
@@ -16,24 +20,21 @@
 #define CUNIT_TEST(name, func) void func();
 #include "running.inc"
 
-
+/**
+ * redefine the macros to involve function calls for registering suites and tests
+ */
 #undef CUNIT_SUITE
 #define CUNIT_SUITE(name, init, clean) run_cunit_suite(name,init,clean);
 #undef CUNIT_TEST
 #define CUNIT_TEST(name, func) reg_cunit_test(name,func);
 
-
-  CU_pSuite pSuite = NULL;
+// the current suite
+CU_pSuite pSuite = NULL;
 
 void run_cunit_suite(char *name, int (*init)(),int(*clean)()) {
-  if(!CU_get_registry()) {
-    /* initialize the CUnit test registry */
-    if (CUE_SUCCESS != CU_initialize_registry ())
-    {
-      perror("no CUnit initalization");
-      exit(EXIT_FAILURE);
-    }
-  }
+  /**
+   * register a new suite
+   */
   pSuite = CU_add_suite (name, init, clean);
   if (NULL == pSuite)
   {
@@ -42,15 +43,18 @@ void run_cunit_suite(char *name, int (*init)(),int(*clean)()) {
   return;
 }
 
-  void reg_cunit_test(char *name, void (*funct)()){
-    if(!pSuite){
-      fprintf(stderr,"no test suite registered\n");
-      exit(EXIT_FAILURE);
-    }
-    if(!CU_add_test(pSuite,name, funct)){
-      fprintf(stderr,"adding %s failed with %d\n",name,CU_get_error());
-      perror("CU add test failed");
-    }
+void reg_cunit_test(char *name, void (*funct)()) {
+  /**
+   * register a new suite
+   */
+  if(!pSuite) {
+    // make sure that at least one suite was registered
+    cluf_exit("no test suite registered\n");
+  }
+  if(!CU_add_test(pSuite,name, funct)) {
+    fprintf(stderr,"adding %s failed with %d\n",name,CU_get_error());
+    perror("CU add test failed");
+  }
 }
 
 /**
@@ -72,48 +76,55 @@ main (int argc, char **argv)
   bool imode = 0, amode = 0, bmode = 0;
   int c;
   while (-1 != (c = getopt (argc, argv, "iba")))
-	 switch (c) {
-		case 'i':
-		  imode = 1;
-		  break;
-		case 'a':
-		  amode = 1;
-		  break;
-		case 'b':
-		  bmode = 1;
-		  break;
-		default:
-		  print_usage (argv[0]);
-		  exit (2);
-	 }
+    switch (c) {
+    case 'i':
+      imode = 1;
+      break;
+    case 'a':
+      amode = 1;
+      break;
+    case 'b':
+      bmode = 1;
+      break;
+    default:
+      print_usage (argv[0]);
+      exit (2);
+    }
   if (!(imode || amode || bmode))
-	 {
-		print_usage (argv[0]);
-		exit (2);
-	 }
+  {
+    print_usage (argv[0]);
+    exit (2);
+  }
 
+  if (CUE_SUCCESS != CU_initialize_registry ())
+  {
+    cluf_exit("no CUnit initalization");
+  }
+/*
+ * running.inc contains macros that are transformed into function calls for registering suites and tests
+ */
 #include "running.inc"
 
   if (imode)
-	 {
-		// is an interactive mode, user will notice
-  CU_curses_run_tests ();
-	 }
+  {
+    // is an interactive mode, user will notice
+    CU_curses_run_tests ();
+  }
   if (bmode)
-	 {
-		/* Run all tests using the basic interface, it is verbose */
-		CU_basic_set_mode (CU_BRM_VERBOSE);
-		CU_basic_run_tests ();
-		printf ("\n");
-	 }
+  {
+    /* Run all tests using the basic interface, it is verbose */
+    CU_basic_set_mode (CU_BRM_VERBOSE);
+    CU_basic_run_tests ();
+    printf ("\n");
+  }
   if (amode)
-	 {
-  /* Run all tests using the automated interface */
-		printf ("automated test, results are in Test-Results.xml\n");
-  CU_set_output_filename ("Test");
-  CU_automated_run_tests ();
-  // CU_list_tests_to_file ();
-	 }
+  {
+    /* Run all tests using the automated interface */
+    printf ("automated test, results are in Test-Results.xml\n");
+    CU_set_output_filename ("Test");
+    CU_automated_run_tests ();
+    // CU_list_tests_to_file ();
+  }
   int ret=0;
   fprintf(stderr,"numbers of failed tests: %d\n", ret=CU_get_number_of_tests_failed());
   CU_cleanup_registry ();

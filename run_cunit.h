@@ -2,6 +2,7 @@
  * \file
  * \author Matthias P. Nowak
  * \date 2018-04-19
+ * only one file can be precompiled
  */
 
 #include <CUnit/Automated.h>

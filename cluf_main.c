@@ -32,7 +32,11 @@ void handle_signal(int signal){
    */
   fprintf(stderr, "shutting down cluf\n");
   exit(EXIT_SUCCESS);
+}
 
+void cluf_exit(char *msg){
+  perror(msg);
+  exit(EXIT_FAILURE);
 }
 
 int main(int argc, char **argv) {

@@ -37,6 +37,7 @@ int cluf_source2target(char *in, char *out);
 int cluf_target2source(char *in, char *out);
 int cluf_source2shortened(char *in, char *out);
 void handle_events();
+void cluf_exit(char *msg);
 
 
 

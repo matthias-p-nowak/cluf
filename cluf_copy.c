@@ -9,21 +9,18 @@ void cluf_createDir(char *destPath,char *srcPath) {
   snprintf(tmpDir,PATH_MAX,"%sXXXXXX",destPath);
   if(!mkdtemp(tmpDir)) {
     // is also creates the directory!
-    perror("creating temp dir template");
-    exit(EXIT_FAILURE);
+    cluf_exit("creating temp dir template");
   }
   if(_cluf.debug>4)
     fprintf(stderr,"tmp dir: %s\n",tmpDir);
   // *************************
   int destFd=open(tmpDir,O_RDONLY);
   if(destFd<=0) {
-    perror("opening temp dir for symlinks");
-    exit(EXIT_FAILURE);
+    cluf_exit("opening temp dir for symlinks");
   }
   DIR *srcDir=opendir(srcPath);
   if(!srcDir) {
-    perror("opening src dir for symlinks");
-    exit(EXIT_FAILURE);
+    cluf_exit("opening src dir for symlinks");
   }
   struct dirent *dirent;
   char linkPath[PATH_MAX];
@@ -39,16 +36,13 @@ void cluf_createDir(char *destPath,char *srcPath) {
   }
   struct stat statBuf;
   if(fstat(dirfd(srcDir),&statBuf)) {
-    perror("fstat on src dir");
-    exit(EXIT_FAILURE);
+    cluf_exit("fstat on src dir");
   }
   if(chown(tmpDir,statBuf.st_uid,statBuf.st_gid)) {
-    perror("chown on dest dir");
-    exit(EXIT_FAILURE);
+    cluf_exit("chown on dest dir");
   }
   if(chmod(tmpDir,statBuf.st_mode)) {
-    perror("chmod on dest dir");
-    exit(EXIT_FAILURE);
+    cluf_exit("chmod on dest dir");
   }
   closedir(srcDir);
   close(destFd);
@@ -59,13 +53,11 @@ void cluf_createDir(char *destPath,char *srcPath) {
   if(syscall(SYS_renameat2,0,tmpDir,0,destPath,RENAME_EXCHANGE))
   {
     fprintf(stderr,"renaming %s -> %s\n",tmpDir,destPath);
-    perror("renaming tmp dir to final");
-    exit(EXIT_FAILURE);
+    cluf_exit("renaming tmp dir to final");
   }
   // tmpDir now points to the old symlink to a directory
   if(unlink(tmpDir)) {
-    perror("unlink symlink to dest dir");
-    exit(EXIT_FAILURE);
+    cluf_exit("unlink symlink to dest dir");
   }
 }
 
@@ -84,8 +76,7 @@ void cluf_copyFile(char* source, int fd) {
         fprintf(stderr,"testing %s\n",destPath);
       struct stat sb;
       if(lstat(destPath,&sb)) {
-        perror("testing directory for being a symbolic link");
-        exit(EXIT_FAILURE);
+        cluf_exit("testing directory for being a symbolic link");
       }
       if(S_ISLNK(sb.st_mode)) {
         strncpy(srcPath,source,i-corr);

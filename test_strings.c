@@ -1,9 +1,45 @@
 
 #include "testing.h"
+#include <setjmp.h>
 
 struct cluf_global _cluf;
+jmp_buf jmpBuf;
+char *exit_msg=NULL;
 
-CUNIT_SUITE("Test Suite for translation",init_suite,clean_suite)
+void cluf_exit(char *msg) {
+  exit_msg=msg;
+  longjmp(jmpBuf,1);
+}
+
+// ###############################################
+
+int dummy() {
+  return 0;
+}
+CUNIT_SUITE("setup tests",dummy,dummy)
+
+void test_forgotten_setup() {
+  memset(&_cluf,0,sizeof(_cluf));
+  if(setjmp(jmpBuf)==0) {
+    cluf_setup_1();
+    CU_FAIL("not failing when required in setup_1");
+  } else{
+    CU_ASSERT_STRING_EQUAL(exit_msg,"no source directory given");
+  }
+}
+CUNIT_TEST("zero setup",test_forgotten_setup)
+
+void test_source_length(){
+  memset(&_cluf,0,sizeof(_cluf));
+  _cluf.sourceName="hello";
+  _cluf.targetName="world";
+  cluf_setup_1();
+  CU_ASSERT_EQUAL(_cluf.sourceLen,5);
+  CU_ASSERT_EQUAL(_cluf.targetLen,5);
+}
+CUNIT_TEST("source/target length",test_source_length)
+
+// ###############################################
 int init_suite(){
 	memset(&_cluf,0,sizeof(_cluf));
   _cluf.sourceName="/tmps/t2/big";
@@ -13,9 +49,8 @@ int init_suite(){
   cluf_setup_1();
 	return 0;
 	}
-int clean_suite(){
-	return 0;
-	}
+CUNIT_SUITE("Test Suite for translation",init_suite,dummy)
+
 
 // ###############################################
 void test_succeed() {
@@ -45,19 +80,17 @@ CUNIT_TEST("simple src->target",test_hello1)
 
 
 // ###############################################
-CUNIT_SUITE("Test Suite for shorted translation",init_suite2,clean_suite2)
-int init_suite2(){
-	memset(&_cluf,0,sizeof(_cluf));
+int init_suite2() {
+  memset(&_cluf,0,sizeof(_cluf));
   _cluf.sourceName="/tmps/t2/big";
   _cluf.targetName="/tmps/t2";
   _cluf.shortenLinks=true;
   cluf_setup_1();
-	return 0;
-	}
-  int clean_suite2(){
-	return 0;
-	}
-void test_shortened1(){
+  return 0;
+}
+CUNIT_SUITE("Test Suite for shorted translation",init_suite2,dummy)
+
+void test_shortened1() {
   char buf2[PATH_MAX];
   buf2[0]='\0';
   if(cluf_source2shortened(_cluf.sourceName,buf2))

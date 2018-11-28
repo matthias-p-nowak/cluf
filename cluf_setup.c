@@ -8,10 +8,8 @@
 #include "cluf.h"
 
 void cluf_setup_1() {
-  if(_cluf.sourceName==NULL) {
-    fprintf(stderr, "no source directory given\n");
-    exit(EXIT_FAILURE);
-  }
+  if(_cluf.sourceName==NULL)
+    cluf_exit("no source directory given");
   _cluf.sourceLen=strlen(_cluf.sourceName);
   if(_cluf.targetName)
     _cluf.targetLen=strlen(_cluf.targetName);
