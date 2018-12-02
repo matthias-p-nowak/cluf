@@ -1,10 +1,8 @@
-
-/*
- * cluf.h
- *
- *  Created on: Nov 20, 2018
- *      Author: me
+/**
+ * @author Matthias P. Nowak
+ * @copyright LGPL 3.0 https://opensource.org/licenses/lgpl-3.0.html
  */
+
 
 #ifndef CLUF_H_
 #define CLUF_H_
@@ -33,7 +31,7 @@ void cluf_copyFile(char* dest, int fd);
 void cluf_setup(char* recFile);
 void cluf_setup_1();
 void cluf_makeSymlinks(char *srcDir);
-int cluf_source2target(char *in, char *out);
+int cluf_source2target(char *in, char *out, int *len);
 int cluf_target2source(char *in, char *out);
 int cluf_source2shortened(char *in, char *out);
 int cluf_source2shortened2(char *in, char *entry, char *out);

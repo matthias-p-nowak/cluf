@@ -1,4 +1,4 @@
-/*
+/**
  * @author Matthias P. Nowak
  * @copyright LGPL 3.0 https://opensource.org/licenses/lgpl-3.0.html
  */
@@ -8,7 +8,8 @@
 
 void cluf_makeSymlinks(char *sourceDirName) {
   char targetPath[PATH_MAX]; // the target as seen by this program
-  cluf_source2target(sourceDirName,targetPath);
+  int targetLen;
+  cluf_source2target(sourceDirName,targetPath, &targetLen);
   if(_cluf.debug>2) {
     fprintf(stderr,"making symlings %s -> %s\n",sourceDirName,targetPath);
   }

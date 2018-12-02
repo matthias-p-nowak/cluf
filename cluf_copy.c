@@ -1,12 +1,18 @@
 /**
+ * @author Matthias P. Nowak
+ * @copyright LGPL 3.0 https://opensource.org/licenses/lgpl-3.0.html
  */
 
 #include "cluf.h"
 #define BUFMAX 1024*1024  
 
 void cluf_createDir(char *destPath,char *srcPath) {
+/**
+ * 
+ */
   char tmpDir[PATH_MAX];
-  snprintf(tmpDir,PATH_MAX,"%sXXXXXX",destPath);
+  // making a template for the temporary directory
+  snprintf(tmpDir,PATH_MAX,"%sXXXXXX",destPath); 
   if(!mkdtemp(tmpDir)) {
     // is also creates the directory!
     cluf_exit("creating temp dir template");
@@ -29,7 +35,8 @@ void cluf_createDir(char *destPath,char *srcPath) {
       continue;
     if(_cluf.debug>6)
       fprintf(stderr,"making symlink for %s\n",dirent->d_name);
-    snprintf(linkPath,PATH_MAX,"%s/%s",srcPath,dirent->d_name);
+    // snprintf(linkPath,PATH_MAX,"%s/%s",srcPath,dirent->d_name);
+    cluf_source2shortened2(srcPath,dirent->d_name,linkPath);
     if(symlinkat(linkPath,destFd,dirent->d_name)) {
       perror(linkPath);
     }
@@ -63,11 +70,14 @@ void cluf_createDir(char *destPath,char *srcPath) {
 
 void cluf_copyFile(char* sourceFilePath, int fd) {
   /**
-   * function copies the file 
+   * function copies the file that was used
    */
   char targetPath[PATH_MAX];
   char srcPath[PATH_MAX];
-  int destLen=snprintf(targetPath,PATH_MAX,"%s%s",_cluf.destDir,sourceFilePath+_cluf.srcLen);
+  // we need the path that is visible to this program, not the one for symlinks
+  int destLen;
+  cluf_source2target(sourceFilePath,targetPath,&destLen);
+  // int destLen=snprintf(targetPath,PATH_MAX,"%s%s",_cluf.destDir,sourceFilePath+_cluf.srcLen);
   if(_cluf.debug>2)
     fprintf(stderr,"copying to %s\n",targetPath);
   // have to check immediate directories, shouldn't be symbolic

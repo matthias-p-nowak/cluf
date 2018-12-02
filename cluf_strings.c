@@ -1,14 +1,18 @@
 /**
+ * @author Matthias P. Nowak
+ * @copyright LGPL 3.0 https://opensource.org/licenses/lgpl-3.0.html
  */
 #include "cluf.h"
 
-int cluf_source2target(char *in, char *out) {
+int cluf_source2target(char *in, char *out, int *len) {
+  /**
+   * put out the filepath that is related to the source path (in)
+   * it means to transfer the remaining from one side to the other
+   * no special cases need to be considered
+   */
   if(!_cluf.targetName)
     cluf_exit("programming error 2018-11-27/1");
-  // if(in[_cluf.sourceLen]=='/')
-  snprintf(out,PATH_MAX,"%s%s",_cluf.targetName,in+_cluf.sourceLen);
-  // else
-  // snprintf(out,PATH_MAX,"%s/%s",_cluf.targetName,in+_cluf.sourceLen);
+  *len=snprintf(out,PATH_MAX,"%s%s",_cluf.targetName,in+_cluf.sourceLen);
   if(_cluf.debug>15)
     printf("%s -> %s\n",in,out);
   return 0;
