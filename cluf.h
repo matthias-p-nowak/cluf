@@ -1,6 +1,7 @@
 /**
  * @author Matthias P. Nowak
  * @copyright LGPL 3.0 https://opensource.org/licenses/lgpl-3.0.html
+ * can be precompiled
  */
 
 
@@ -25,8 +26,11 @@
 #include <sys/types.h>
 #include <unistd.h>
 
+/*
+ * documentation to the function is in the corresponding files
+ */
 
-int cluf_same(int fd1, int fd2);
+bool cluf_same(int fd1, int fd2);
 void cluf_copyFile(char* dest, int fd);
 void cluf_setup(char* recFile);
 void cluf_setup_1();
@@ -44,10 +48,8 @@ struct cluf_global {
     int debug; // increased verbosity
     int fanotifyFD; // file descriptor for fanotify 
     FILE *fanotifyFile; // for recording opened files
-    int srcLen; // length of sourcefile mount point
-    char *destDir; // path to destination
     char *sourceName; // source name where the proper files are
-    int sourceLen;
+    int sourceLen; // length of sourcefile mount point
     char *targetName; // place to put symlinks and opened proper files
     int targetLen;
     bool shortenLinks; // indicate a use in a chrooted environment

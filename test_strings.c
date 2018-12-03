@@ -1,6 +1,10 @@
+/*
+ * @author Matthias P. Nowak
+ * @copyright LGPL 3.0 https://opensource.org/licenses/lgpl-3.0.html
+ */
 
 #include "testing.h"
-#include <setjmp.h>
+
 
 struct cluf_global _cluf;
 jmp_buf jmpBuf;

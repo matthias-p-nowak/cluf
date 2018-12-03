@@ -1,6 +1,8 @@
 /*
  * @author Matthias P. Nowak
  * @copyright LGPL 3.0 https://opensource.org/licenses/lgpl-3.0.html
+ * 
+ * contains functions handling the fanotify events
  */
 
 #include "cluf.h"
@@ -12,7 +14,6 @@ void handle_event(const struct fanotify_event_metadata *metadata) {
    */
   char procFileName[PATH_MAX];
   char openedFileName[PATH_MAX];
-  struct stat statbuf;
   /*
    * getting the filename from a fd: this is the solution in the fanotify example
    * readlink of the fd in /proc - it requires a snprintf - not the most effective solution
@@ -23,42 +24,48 @@ void handle_event(const struct fanotify_event_metadata *metadata) {
     cluf_exit("failed link for readlink");
   }
   openedFileName[len]='\0'; // TODO - is it necessary?
+  if(_cluf.debug>4) {
+    // printing out the type of access
+    char targetFN[PATH_MAX]; // for reporting
+    int targetLen; // dummy
+    cluf_source2target(openedFileName,targetFN, &targetLen);
+    fprintf(stderr, "mask: %llu %s %s\n",metadata->mask,
+           openedFileName, targetFN);
+    if(metadata->mask & FAN_ACCESS)
+      fprintf(stderr,"A ");
+    if(metadata->mask & FAN_MODIFY)
+      fprintf(stderr,"M ");
+    if(metadata->mask & FAN_CLOSE_WRITE)
+      fprintf(stderr,"CW ");
+    if(metadata->mask & FAN_CLOSE_NOWRITE)
+      fprintf(stderr,"CNW ");
+    if(metadata->mask & FAN_OPEN)
+      fprintf(stderr,"O ");
+    if(metadata->mask & FAN_ONDIR)
+      fprintf(stderr,"OD ");
+    if(metadata->mask & FAN_EVENT_ON_CHILD)
+      fprintf(stderr,"EOC ");
+    fprintf(stderr,"\n");
+  }
+  if(metadata->mask & FAN_OPEN) {
+    // this means action
+    if(_cluf.fanotifyFile)
+      fprintf(_cluf.fanotifyFile,"%s\n",openedFileName);
+    // and action
+    cluf_copyFile(openedFileName,metadata->fd);
+  }
+
+  // ***** what kind of file do we have?
+  struct stat statbuf;
   int ret=fstat(metadata->fd, &statbuf);
   if(ret<0) {
     cluf_exit("fstat failed");
   }
-  if(_cluf.debug>4) {
-    char targetFN[PATH_MAX];
-    int targetLen;
-    cluf_source2target(openedFileName,targetFN, &targetLen);
-    printf("mask: %llu %s %s%s\n",metadata->mask,
-           openedFileName, _cluf.destDir, targetFN);
-    if(metadata->mask & FAN_ACCESS)
-      printf("A ");
-    if(metadata->mask & FAN_MODIFY)
-      printf("M ");
-    if(metadata->mask & FAN_CLOSE_WRITE)
-      printf("CW ");
-    if(metadata->mask & FAN_CLOSE_NOWRITE)
-      printf("CNW ");
-    if(metadata->mask & FAN_OPEN)
-      printf("O ");
-    if(metadata->mask & FAN_ONDIR)
-      printf("OD ");
-    if(metadata->mask & FAN_EVENT_ON_CHILD)
-      printf("EOC ");
-    printf("\n");
-  }
-  if(metadata->mask & FAN_OPEN) {
-    if(_cluf.fanotifyFile)
-      fprintf(_cluf.fanotifyFile,"%s\n",openedFileName);
-    cluf_copyFile(openedFileName,metadata->fd);
-  }
-
   if(S_ISDIR(statbuf.st_mode))
   {
+    // TODO: rethink! if this is called then there is a symlink to the directory, hence making symlinks is nonsense
     if(_cluf.debug>1) {
-      printf("got a directory %s\n",openedFileName);
+      fprintf(stderr, "got a directory %s\n",openedFileName);
       // TODO: update symlinks in that directory
     }
     cluf_makeSymlinks(openedFileName);
@@ -72,9 +79,10 @@ void handle_events() {
    * the signal is handled in main and calls exit
    */
   printf("start handling events\n");
-  struct fanotify_event_metadata buf[200];
-  struct fanotify_event_metadata *metadata;
+  struct fanotify_event_metadata buf[200]; // can hold 200 items - number taken from fanotify example
+  struct fanotify_event_metadata *metadata; // pointer to a single entry
   ssize_t len;
+  // all opened files are reported, this program opens directories ...
   pid_t my_pid;
   my_pid=getpid();
   for(;;) {
@@ -82,7 +90,7 @@ void handle_events() {
      * the forever loop
      */
     if(_cluf.debug>6)
-      printf("another round\n");
+      fprintf(stderr,"another round\n");
     // big read
     len = read(_cluf.fanotifyFD, (void *) &buf, sizeof(buf));
     if (len == -1 && errno != EAGAIN) {
@@ -91,7 +99,10 @@ void handle_events() {
     if(len<=0) {
       cluf_exit("end of fanotify events");
     }
-    /* Point to the first event in the buffer */
+    if(_cluf.debug>5){
+      fprintf(stderr,"got %lu entries in this round\n",len/sizeof(struct fanotify_event_metadata));
+    }
+    /* Point to the first event in the bufferl test; and advance*/
     for (metadata = buf; FAN_EVENT_OK(metadata, len);
          metadata = FAN_EVENT_NEXT(metadata, len)) {
       // the inside loop, one for each metadata

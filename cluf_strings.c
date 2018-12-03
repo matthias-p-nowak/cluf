@@ -14,7 +14,7 @@ int cluf_source2target(char *in, char *out, int *len) {
     cluf_exit("programming error 2018-11-27/1");
   *len=snprintf(out,PATH_MAX,"%s%s",_cluf.targetName,in+_cluf.sourceLen);
   if(_cluf.debug>15)
-    printf("%s -> %s\n",in,out);
+    fprintf(stderr,"%s -> %s\n",in,out);
   return 0;
 }
 

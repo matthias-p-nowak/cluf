@@ -81,8 +81,8 @@ void cluf_copyFile(char* sourceFilePath, int fd) {
   if(_cluf.debug>2)
     fprintf(stderr,"copying to %s\n",targetPath);
   // have to check immediate directories, shouldn't be symbolic
-  int corr=_cluf.srcLen-strlen(_cluf.destDir);
-  for(int i=_cluf.srcLen+1; i<destLen; ++i) {
+  int corr=_cluf.sourceLen-_cluf.targetLen;
+  for(int i=_cluf.sourceLen+1; i<destLen; ++i) {
     if(targetPath[i]=='/') {
       targetPath[i]='\0';
       if(_cluf.debug>3)

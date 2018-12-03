@@ -29,7 +29,7 @@ void print_usage(char *progname) {
 
 void handle_signal(int signal) {
   /**
-   *
+   * actually, pulling out the hard way, let the OS do the clean-up
    */
   fprintf(stderr, "shutting down cluf\n");
   exit(EXIT_SUCCESS);
@@ -119,6 +119,8 @@ int main(int argc, char **argv) {
   }
 // *************************
   handle_events();
+  // ***** should not arrive here *****
+  // the signal handler has an exit
   if(_cluf.debug>0)
     printf("all done\n");
   exit(EXIT_SUCCESS);
