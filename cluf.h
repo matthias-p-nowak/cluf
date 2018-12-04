@@ -24,6 +24,7 @@
 #include <sys/stat.h>
 #include <sys/syscall.h>
 #include <sys/types.h>
+#include <time.h>
 #include <unistd.h>
 
 /*
@@ -53,6 +54,7 @@ struct cluf_global {
     char *targetName; // place to put symlinks and opened proper files
     int targetLen;
     bool shortenLinks; // indicate a use in a chrooted environment
+    time_t startTime;
 };
 
 extern struct cluf_global _cluf;

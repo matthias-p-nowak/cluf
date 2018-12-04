@@ -14,6 +14,7 @@ void cluf_setup_1() {
    */
     _cluf.targetLen=0;
     _cluf.sourceLen=0;
+    _cluf.startTime=time(NULL);
   if(_cluf.sourceName==NULL)
     cluf_exit("no source directory given");
   _cluf.sourceLen=strlen(_cluf.sourceName);
@@ -44,6 +45,7 @@ void cluf_setup(char* recFile) {
    * carries out the setup and establishes the notify listening
    */
   // *************************
+  cluf_setup_1();
   // setting up fanotify
   if(_cluf.debug>2)
     printf("setting up watched filesystem\n");

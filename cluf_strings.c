@@ -12,8 +12,10 @@ int cluf_source2target(char *in, char *out, int *len) {
    */
   if(!_cluf.targetName)
     cluf_exit("programming error 2018-11-27/1");
+  if(_cluf.debug>6)
+    fprintf(stderr,"source len: %d\n",_cluf.sourceLen);
   *len=snprintf(out,PATH_MAX,"%s%s",_cluf.targetName,in+_cluf.sourceLen);
-  if(_cluf.debug>15)
+  if(_cluf.debug>5)
     fprintf(stderr,"%s -> %s\n",in,out);
   return 0;
 }
@@ -46,22 +48,26 @@ int cluf_source2shortened(char *in, char *out) {
   return 0;
 }
 
-int cluf_source2shortened2(char *in, char *entry, char *out){
+int cluf_source2shortened2(char *in, char *entry, char *out) {
   int l=strlen(in);
   if(_cluf.shortenLinks) {
     if(l>_cluf.targetLen) {
+      if(_cluf.debug>5)
+        fprintf(stderr,"shortening on the target\n");
       snprintf(out,PATH_MAX,"%s/%s",in+_cluf.targetLen,entry);
-    }else{
-      if(l<_cluf.targetLen){
+    } else {
+      if(l<_cluf.targetLen) {
         if(_cluf.debug>0)
           fprintf(stderr,"shortening isn't possible - '%s' is already too short\n",in);
         return 1;
       }
       // an entry in the root directory
+      if(_cluf.debug>5)
+        fprintf(stderr,"having a root item in the shortened case : /%s\n",entry);
       snprintf(out,PATH_MAX,"/%s",entry);
     }
-  } else{
-    snprintf(out,PATH_MAX,"%s/%s/%s",_cluf.targetName,in+_cluf.sourceLen,entry);
-  }
+  } else {
+      snprintf(out,PATH_MAX,"%s/%s",in,entry);
+    }
   return 0;
 }

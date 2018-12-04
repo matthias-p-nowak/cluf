@@ -44,6 +44,7 @@ void cluf_makeSymlinks(char *sourceDirName) {
       fprintf(stderr,"making symlink for %s\n",dirent->d_name);
     // ***** target may be shortened *****
     if(cluf_source2shortened2(sourceDirName,dirent->d_name,targetPath))
+      cluf_exit("shortening failed in makeSymlinks");
     if(symlinkat(targetPath,target_fd,dirent->d_name)) {
       perror(targetPath);
     }

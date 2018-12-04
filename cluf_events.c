@@ -1,7 +1,7 @@
 /*
  * @author Matthias P. Nowak
  * @copyright LGPL 3.0 https://opensource.org/licenses/lgpl-3.0.html
- * 
+ *
  * contains functions handling the fanotify events
  */
 
@@ -29,8 +29,9 @@ void handle_event(const struct fanotify_event_metadata *metadata) {
     char targetFN[PATH_MAX]; // for reporting
     int targetLen; // dummy
     cluf_source2target(openedFileName,targetFN, &targetLen);
-    fprintf(stderr, "mask: %llu %s %s\n",metadata->mask,
-           openedFileName, targetFN);
+    fprintf(stderr, "\n\n (%4.2f) mask: %llu %s %s: ",
+            difftime(time(NULL),_cluf.startTime), metadata->mask,
+            openedFileName, targetFN);
     if(metadata->mask & FAN_ACCESS)
       fprintf(stderr,"A ");
     if(metadata->mask & FAN_MODIFY)
@@ -45,17 +46,11 @@ void handle_event(const struct fanotify_event_metadata *metadata) {
       fprintf(stderr,"OD ");
     if(metadata->mask & FAN_EVENT_ON_CHILD)
       fprintf(stderr,"EOC ");
-    fprintf(stderr,"\n");
+    fprintf(stderr,"\n-------------\n");
   }
-  if(metadata->mask & FAN_OPEN) {
-    // this means action
-    if(_cluf.fanotifyFile)
-      fprintf(_cluf.fanotifyFile,"%s\n",openedFileName);
-    // and action
-    cluf_copyFile(openedFileName,metadata->fd);
-  }
-
-  // ***** what kind of file do we have?
+  // *****************************************
+  // ***** what kind of file do we have? *****
+  // *****************************************
   struct stat statbuf;
   int ret=fstat(metadata->fd, &statbuf);
   if(ret<0) {
@@ -63,13 +58,22 @@ void handle_event(const struct fanotify_event_metadata *metadata) {
   }
   if(S_ISDIR(statbuf.st_mode))
   {
-    // TODO: rethink! if this is called then there is a symlink to the directory, hence making symlinks is nonsense
+    // directories are ignored, we are here because of an accessed symlink
     if(_cluf.debug>1) {
       fprintf(stderr, "got a directory %s\n",openedFileName);
-      // TODO: update symlinks in that directory
     }
-    cluf_makeSymlinks(openedFileName);
   }
+  else {
+    // it is not a directory
+    if(metadata->mask & FAN_OPEN) {
+      // this means action - we will copy opened files
+      if(_cluf.fanotifyFile)
+        fprintf(_cluf.fanotifyFile,"%s\n",openedFileName);
+      // and action
+      cluf_copyFile(openedFileName,metadata->fd);
+    }
+  }
+  // fanotify opens a file descriptor and leave it up to us to close it
   close(metadata->fd);
 }
 
@@ -99,7 +103,7 @@ void handle_events() {
     if(len<=0) {
       cluf_exit("end of fanotify events");
     }
-    if(_cluf.debug>5){
+    if(_cluf.debug>5) {
       fprintf(stderr,"got %lu entries in this round\n",len/sizeof(struct fanotify_event_metadata));
     }
     /* Point to the first event in the bufferl test; and advance*/

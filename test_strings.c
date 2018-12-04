@@ -102,10 +102,38 @@ void test_wrong_shortened() {
 }
 CUNIT_TEST("wrong shortened setup",test_wrong_shortened)
 
-
 // ###############################################
 
 int init_suite() {
+  /*
+   * create a bit random source directory and test on correct target creation
+   */
+  memset(&_cluf,0,sizeof(_cluf));
+  strcpy(buf1,"/tmps/t1");
+  _cluf.sourceName=buf1;
+  strcpy(buf2,"/tmps/t2");
+  _cluf.targetName=buf2;
+  _cluf.shortenLinks=false;
+  // _cluf.debug=1000;
+  cluf_setup_1();
+  return 0;
+}
+CUNIT_SUITE("Test Suite for translation",init_suite,dummy)
+
+void test_shortened5(){
+  /*
+   * make symlinks as at the beginning
+   */
+  char buf1[PATH_MAX];
+  if(cluf_source2shortened2(_cluf.sourceName,"hello world",buf1))
+    CU_FAIL("source entry to shortened failed");
+  CU_ASSERT_STRING_EQUAL(buf1,"/tmps/t1/hello world");
+}
+CUNIT_TEST("shortened entry in shortened case",test_shortened5)
+
+// ###############################################
+
+int init_suite3() {
   /*
    * create a bit random source directory and test on correct target creation
    */
@@ -119,7 +147,7 @@ int init_suite() {
   cluf_setup_1();
   return 0;
 }
-CUNIT_SUITE("Test Suite for translation",init_suite,dummy)
+CUNIT_SUITE("Test Suite for translation with random",init_suite3,dummy)
 
 
 void test_basic() {
@@ -207,6 +235,16 @@ void test_shortened1() {
   CU_ASSERT_STRING_EQUAL(buf3,"/");
   int r=cluf_source2shortened("/tmps/t",buf3);
   CU_ASSERT_EQUAL(r,1);
-
 }
 CUNIT_TEST("basic shortened test",test_shortened1)
+
+void test_shortened4(){
+  /*
+   * make symlinks as at the beginning
+   */
+  char buf1[PATH_MAX];
+  if(cluf_source2shortened2(_cluf.sourceName,"hello world",buf1))
+    CU_FAIL("source entry to shortened failed");
+  CU_ASSERT_STRING_EQUAL(buf1,"/big/hello world");
+}
+CUNIT_TEST("shortened entry in shortened case",test_shortened4)
