@@ -131,6 +131,22 @@ void test_shortened5(){
 }
 CUNIT_TEST("shortened entry in shortened case",test_shortened5)
 
+void test_back2src(){
+  char buf1[PATH_MAX];
+  if(cluf_target2source("/tmps/t2/dir","missing link",buf1))
+    CU_FAIL("test back 2 source");
+  CU_ASSERT_STRING_EQUAL(buf1,"/tmps/t1/dir/missing link");
+}
+CUNIT_TEST("back to source 4 symlinks",test_back2src)
+
+void test_back2src2(){
+    char buf1[PATH_MAX];
+  if(cluf_target2source("/tmps/t2","missing link",buf1))
+    CU_FAIL("test back 2 source");
+  CU_ASSERT_STRING_EQUAL(buf1,"/tmps/t1/missing link");
+}
+CUNIT_TEST("back to source 4 symlinks - bare",test_back2src2)
+
 // ###############################################
 
 int init_suite3() {
@@ -248,3 +264,19 @@ void test_shortened4(){
   CU_ASSERT_STRING_EQUAL(buf1,"/big/hello world");
 }
 CUNIT_TEST("shortened entry in shortened case",test_shortened4)
+
+void test_back2src3(){
+  char buf1[PATH_MAX];
+  if(cluf_target2source("/tmps/t2/dir","missing link",buf1))
+    CU_FAIL("test back 2 source");
+  CU_ASSERT_STRING_EQUAL(buf1,"/big/dir/missing link");
+}
+CUNIT_TEST("back to source 4 symlinks",test_back2src3)
+
+void test_back2src4(){
+    char buf1[PATH_MAX];
+  if(cluf_target2source("/tmps/t2","missing link",buf1))
+    CU_FAIL("test back 2 source");
+  CU_ASSERT_STRING_EQUAL(buf1,"/big/missing link");
+}
+CUNIT_TEST("back to source 4 symlinks - bare",test_back2src4)

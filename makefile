@@ -13,7 +13,7 @@ OBJS=$(SRCS:.c=.o)
 MSRC=$(wildcard *main.c)
 TOBJS=$(filter-out $(MSRC:.c=.o), $(OBJS)) $(TSRCS:.c=.o)
 
-CFLAGS=-g -H
+CFLAGS=-g -H -pthread
 
 ##### the target program #####
 TARGET=cluf

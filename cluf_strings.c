@@ -20,12 +20,6 @@ int cluf_source2target(char *in, char *out, int *len) {
   return 0;
 }
 
-int cluf_target2source(char *in, char *out) {
-  fprintf(stderr,"programming required 2018-11-28/1\n");
-  exit(EXIT_FAILURE);
-  return 0;
-}
-
 int cluf_source2shortened(char *in, char *out) {
   int l=strlen(in);
   if(_cluf.shortenLinks) {
@@ -69,5 +63,27 @@ int cluf_source2shortened2(char *in, char *entry, char *out) {
   } else {
       snprintf(out,PATH_MAX,"%s/%s",in,entry);
     }
+  return 0;
+}
+
+int cluf_target2source(char *in, char *entry, char *out){
+  if(_cluf.shortenLinks){
+    // cut the common part
+    if(strlen(in)==_cluf.targetLen){
+      // the part after common from source+'/'+entry
+      snprintf(out,PATH_MAX,"%s/%s",_cluf.sourceName+_cluf.targetLen,entry);
+    }else{
+      // have later parts from 'in' - the first slash is from the 'in' part
+      snprintf(out,PATH_MAX,"%s%s/%s",_cluf.sourceName+_cluf.targetLen,in+_cluf.targetLen,entry);
+    }
+  }else{
+    if(strlen(in)==_cluf.targetLen){
+      // source dir and entry
+      snprintf(out,PATH_MAX,"%s/%s",_cluf.sourceName,entry);
+    }else{
+      // source + later part of 'in'+entry. first '/' is from in
+      snprintf(out,PATH_MAX,"%s%s/%s",_cluf.sourceName, in+_cluf.targetLen,entry);
+    }
+  }
   return 0;
 }

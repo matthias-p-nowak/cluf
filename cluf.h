@@ -15,6 +15,7 @@
 #include <fcntl.h>
 #include <limits.h>
 #include <linux/fs.h> // for RENAME_EXCHANGE
+#include <pthread.h>
 #include <signal.h>
 #include <stdbool.h>
 #include <stdio.h>
@@ -27,21 +28,23 @@
 #include <time.h>
 #include <unistd.h>
 
+
 /*
  * documentation to the function is in the corresponding files
  */
 
 bool cluf_same(int fd1, int fd2);
-void cluf_copyFile(char* dest, int fd);
-void cluf_setup(char* recFile);
-void cluf_setup_1();
-void cluf_makeSymlinks(char *srcDir);
-int cluf_source2target(char *in, char *out, int *len);
-int cluf_target2source(char *in, char *out);
-int cluf_source2shortened(char *in, char *out);
 int cluf_source2shortened2(char *in, char *entry, char *out);
-void handle_events();
+int cluf_source2shortened(char *in, char *out);
+int cluf_source2target(char *in, char *out, int *len);
+int cluf_target2source(char *in, char *entry, char *out);
+void cluf_copyFile(char* dest, int fd);
 void cluf_exit(char *msg);
+void cluf_makeSymlinks(char *srcDir);
+void cluf_setup_1();
+void cluf_setup(char* recFile);
+void cluf_handle_events();
+void cluf_updateSymlinks(char *target);
 
 
 

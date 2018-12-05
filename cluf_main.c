@@ -49,6 +49,16 @@ void record_pid(char *pidFile) {
   fclose(f);
 }
 
+void * startUpdatingSymlinks(void *dummy){
+  if(_cluf.debug>3){
+    fprintf(stderr,"start updating symlinks\n");
+  }
+  cluf_updateSymlinks(_cluf.targetName);
+  return NULL;
+}
+
+
+
 int main(int argc, char **argv) {
   /**
    *
@@ -118,7 +128,30 @@ int main(int argc, char **argv) {
     }
   }
 // *************************
-  handle_events();
+  if(_cluf.targetName){
+    if(_cluf.debug>2){
+      const size_t myStackSize=16*1024*1024; // 16 MByte
+      fprintf(stderr,"starting symlink updating thread\n");
+      pthread_t bgUpdateSymlink;
+       pthread_attr_t attr;
+       if(pthread_attr_init(&attr)){
+         cluf_exit("thread initialization");
+       }
+      size_t stacksize;
+      if(pthread_attr_getstacksize(&attr,&stacksize)){
+        cluf_exit("getting stacksize failed");
+      }
+      if(stacksize < myStackSize){
+        if(_cluf.debug>3)
+          fprintf(stderr," increasing stack from %ld to %ld\n",stacksize,myStackSize);
+          if(pthread_attr_setstacksize(&attr,myStackSize))
+            cluf_exit("setting stack size");
+      }
+      if(pthread_create(&bgUpdateSymlink,&attr,startUpdatingSymlinks,NULL))
+        cluf_exit("creating background symlink thread");
+    }
+  }
+  cluf_handle_events();
   // ***** should not arrive here *****
   // the signal handler has an exit
   if(_cluf.debug>0)

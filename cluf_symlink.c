@@ -1,7 +1,7 @@
 /**
  * @author Matthias P. Nowak
  * @copyright LGPL 3.0 https://opensource.org/licenses/lgpl-3.0.html
- * 
+ *
  * contains the symlink related function
  */
 
@@ -50,6 +50,26 @@ void cluf_makeSymlinks(char *sourceDirName) {
     }
   }
   close(target_fd);
+  closedir(sourceDir);
+}
+
+void cluf_updateSymlinks(char *target) {
+  if(_cluf.debug>5)
+    fprintf(stderr, "updating symlinks in %s\n",target);
+  DIR *sourceDir=opendir(target);
+  if(!sourceDir)
+    cluf_exit("open source dir for symlink");
+  //
+  int sourceDirFd=dirfd(sourceDir);
+  struct dirent *dirent;
+  while(dirent=readdir(sourceDir)) {
+    // going through the entries
+    if(!strcmp(dirent->d_name,".")||(!strcmp(dirent->d_name,"..")))
+      continue;
+    if(_cluf.debug>3)
+      fprintf(stderr,"making symlink for %s\n",dirent->d_name);
+  }
+  //
   closedir(sourceDir);
 }
 

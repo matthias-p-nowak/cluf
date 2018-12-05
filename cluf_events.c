@@ -28,7 +28,10 @@ void handle_event(const struct fanotify_event_metadata *metadata) {
     // printing out the type of access
     char targetFN[PATH_MAX]; // for reporting
     int targetLen; // dummy
-    cluf_source2target(openedFileName,targetFN, &targetLen);
+    if(_cluf.targetName)
+      cluf_source2target(openedFileName,targetFN, &targetLen);
+    else
+      strcpy(targetFN,"-none-");
     fprintf(stderr, "\n\n (%4.2f) mask: %llu %s %s: ",
             difftime(time(NULL),_cluf.startTime), metadata->mask,
             openedFileName, targetFN);
@@ -70,14 +73,13 @@ void handle_event(const struct fanotify_event_metadata *metadata) {
       if(_cluf.fanotifyFile)
         fprintf(_cluf.fanotifyFile,"%s\n",openedFileName);
       // and action
-      cluf_copyFile(openedFileName,metadata->fd);
+      if(_cluf.targetName)
+        cluf_copyFile(openedFileName,metadata->fd);
     }
   }
-  // fanotify opens a file descriptor and leave it up to us to close it
-  close(metadata->fd);
 }
 
-void handle_events() {
+void cluf_handle_events() {
   /**
    * the function is called from the main function, reading from the fanotifyFD until a signal is received
    * the signal is handled in main and calls exit
@@ -124,5 +126,7 @@ void handle_events() {
       // must close the metadata->fd
       close(metadata->fd);
     }
+    if(_cluf.fanotifyFile)
+      fflush(_cluf.fanotifyFile);
   }
 }
