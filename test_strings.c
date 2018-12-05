@@ -133,7 +133,7 @@ CUNIT_TEST("shortened entry in shortened case",test_shortened5)
 
 void test_back2src(){
   char buf1[PATH_MAX];
-  if(cluf_target2source("/tmps/t2/dir","missing link",buf1))
+  if(cluf_target2sourceShortened("/tmps/t2/dir","missing link",buf1))
     CU_FAIL("test back 2 source");
   CU_ASSERT_STRING_EQUAL(buf1,"/tmps/t1/dir/missing link");
 }
@@ -141,7 +141,7 @@ CUNIT_TEST("back to source 4 symlinks",test_back2src)
 
 void test_back2src2(){
     char buf1[PATH_MAX];
-  if(cluf_target2source("/tmps/t2","missing link",buf1))
+  if(cluf_target2sourceShortened("/tmps/t2","missing link",buf1))
     CU_FAIL("test back 2 source");
   CU_ASSERT_STRING_EQUAL(buf1,"/tmps/t1/missing link");
 }
@@ -220,6 +220,13 @@ void test_shortened2() {
 }
 CUNIT_TEST("shortened in non-shortened case",test_shortened2)
 
+void test_back2src6(){
+  char buf1[PATH_MAX];
+  if(cluf_target2source(_cluf.targetName,buf1))
+    CU_FAIL("target (base) 2 source failed");
+  CU_ASSERT_STRING_EQUAL(_cluf.sourceName,buf1);
+}
+CUNIT_TEST("target (base) to source",test_back2src6)
 
 // ###############################################
 int init_suite2() {
@@ -267,7 +274,7 @@ CUNIT_TEST("shortened entry in shortened case",test_shortened4)
 
 void test_back2src3(){
   char buf1[PATH_MAX];
-  if(cluf_target2source("/tmps/t2/dir","missing link",buf1))
+  if(cluf_target2sourceShortened("/tmps/t2/dir","missing link",buf1))
     CU_FAIL("test back 2 source");
   CU_ASSERT_STRING_EQUAL(buf1,"/big/dir/missing link");
 }
@@ -275,8 +282,23 @@ CUNIT_TEST("back to source 4 symlinks",test_back2src3)
 
 void test_back2src4(){
     char buf1[PATH_MAX];
-  if(cluf_target2source("/tmps/t2","missing link",buf1))
+  if(cluf_target2sourceShortened("/tmps/t2","missing link",buf1))
     CU_FAIL("test back 2 source");
   CU_ASSERT_STRING_EQUAL(buf1,"/big/missing link");
 }
 CUNIT_TEST("back to source 4 symlinks - bare",test_back2src4)
+
+void test_back2src5(){
+  char buf1[PATH_MAX];
+  if(!cluf_target2sourceShortened("/tmps/wrong","missing",buf1))
+    CU_FAIL("wrong submitted path not rejected");
+}
+CUNIT_TEST("wrong start path",test_back2src5)
+
+void test_back2src7(){
+  char buf1[PATH_MAX];
+  if(cluf_target2source("/tmps/t2/sub",buf1))
+    CU_FAIL("target/sub to source");
+  CU_ASSERT_STRING_EQUAL("/tmps/t2/big/sub",buf1);
+}
+CUNIT_TEST("target/sub to source",test_back2src7)

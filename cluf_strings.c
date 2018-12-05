@@ -66,8 +66,12 @@ int cluf_source2shortened2(char *in, char *entry, char *out) {
   return 0;
 }
 
-int cluf_target2source(char *in, char *entry, char *out){
+int cluf_target2sourceShortened(char *in, char *entry, char *out){
   if(_cluf.shortenLinks){
+    if(!strstr(in,_cluf.targetName)){
+      snprintf(out,PATH_MAX,"asked source for a directory '%s' that isn't in the submitted target '%s'\n",in,_cluf.targetName);
+      return 1;
+    }
     // cut the common part
     if(strlen(in)==_cluf.targetLen){
       // the part after common from source+'/'+entry
@@ -85,5 +89,13 @@ int cluf_target2source(char *in, char *entry, char *out){
       snprintf(out,PATH_MAX,"%s%s/%s",_cluf.sourceName, in+_cluf.targetLen,entry);
     }
   }
+  return 0;
+}
+
+int cluf_target2source(char *in, char *out){
+  if(strlen(in)==_cluf.targetLen)
+    strcpy(out,_cluf.sourceName); 
+  else
+    snprintf(out,PATH_MAX,"%s%s",_cluf.sourceName,in+_cluf.targetLen);
   return 0;
 }

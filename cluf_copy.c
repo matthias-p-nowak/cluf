@@ -4,15 +4,15 @@
  */
 
 #include "cluf.h"
-#define BUFMAX 1024*1024  
+#define BUFMAX 1024*1024
 
 void cluf_createDir(char *destPath,char *srcPath) {
-/**
- * 
- */
+  /**
+   *
+   */
   char tmpDir[PATH_MAX];
   // making a template for the temporary directory
-  snprintf(tmpDir,PATH_MAX,"%sXXXXXX",destPath); 
+  snprintf(tmpDir,PATH_MAX,"%sXXXXXX",destPath);
   if(!mkdtemp(tmpDir)) {
     // is also creates the directory!
     cluf_exit("creating temp dir template");
@@ -26,7 +26,8 @@ void cluf_createDir(char *destPath,char *srcPath) {
   }
   DIR *srcDir=opendir(srcPath);
   if(!srcDir) {
-    cluf_exit("opening src dir for symlinks");
+    snprintf(tmpDir,PATH_MAX,"opening src dir '%s' for symlinks",srcPath);
+    cluf_exit(tmpDir);
   }
   struct dirent *dirent;
   char linkPath[PATH_MAX];
@@ -85,16 +86,20 @@ void cluf_copyFile(char* sourceFilePath, int fd) {
   for(int i=_cluf.sourceLen+1; i<destLen; ++i) {
     if(targetPath[i]=='/') {
       targetPath[i]='\0';
-      if(_cluf.debug>3)
+      if(_cluf.debug>5)
         fprintf(stderr,"testing %s\n",targetPath);
       struct stat sb;
       if(lstat(targetPath,&sb)) {
         cluf_exit("testing directory for being a symbolic link");
       }
       if(S_ISLNK(sb.st_mode)) {
-        strncpy(srcPath,sourceFilePath,i-corr);
-        if(_cluf.debug>3)
+        strncpy(srcPath,sourceFilePath,i+corr);
+        srcPath[i+corr]='\0';
+        if(_cluf.debug>3) {
+          fprintf(stderr,"sfp=%s i=%d, corr=%d\n",sourceFilePath,i,corr);
           fprintf(stderr,"replace %s <- %s\n",targetPath,srcPath);
+
+        }
         cluf_createDir(targetPath,srcPath);
       }
       targetPath[i]='/';
@@ -109,20 +114,20 @@ void cluf_copyFile(char* sourceFilePath, int fd) {
   int fd2=mkstemp(srcPath);
   char buf[BUFMAX];
   ssize_t rr,rw;
-  while(0< ( rr=read(fd,buf,BUFMAX))){
+  while(0< ( rr=read(fd,buf,BUFMAX))) {
     rw=write(fd2,buf,rr);
-    if(rw != rr){
+    if(rw != rr) {
       cluf_exit("file copying");
     }
   }
   close(fd2);
-  if(chown(srcPath,sb.st_uid,sb.st_gid)){
+  if(chown(srcPath,sb.st_uid,sb.st_gid)) {
     cluf_exit("changin owner");
   }
-  if(chmod(srcPath,sb.st_mode)){
+  if(chmod(srcPath,sb.st_mode)) {
     cluf_exit("changing file mode");
   }
-  if(rename(srcPath,targetPath)){
+  if(rename(srcPath,targetPath)) {
     cluf_exit("error in final file symlink rename");
   }
 }
