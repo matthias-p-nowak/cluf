@@ -1,0 +1,59 @@
+.TH cluf 1 "2018-12-06" "Matthias P. Nowak"
+.SH NAME
+cluf \- copying used files and maintain symbolic links based on a source directory
+.SH SYNOPSIS
+.B cluf 
+.B [-vds]
+.B [\-f\ \fI<file>\fB]
+.B [\-p\ \fI<pid_file>\fB]
+.B \fI<source> 
+.B [\fI<destination>\fB]
+.PP
+
+.SH DESCRIPTION
+The program \fBcluf\fR watches the accessed files on \fI<source>\fR via the
+.BR fanotify (7)
+(requires a kernel option) hook. 
+The files that are opened, can be recorded in \fI<file>\fR or copied to the \fI<destination>\fR.
+The program can be used 
+
+.SH OPTIONS
+.TP
+.B \-v 
+Increase verbosity by one, the higher the more output will be printed.
+.TP
+.B \-d
+After the initialization, the program forks into background and runs a a daemon.
+.TP
+.B \-s
+Shortening the created symlinks. All symlinks are created as with absolute paths.
+.TP 
+.BI \-f \ <file>
+All accessed files are recorded in \fI<file>\fR. 
+If a file is accessed several times, it is recorded several times.
+This will happen when there is no \fI<destination>\fR.
+.TP
+.BI \-p \ <pid_file>
+For follow up like 
+.BR kill (1)
+the process id can be recorded in \fI<pid_file>\fR.
+.TP
+.I <source>
+This is the mandatory directory that will be watched. 
+It is required that this is a mounted directory, otherwise the 
+.BR fanotify (7) 
+call will fail.
+.TP
+.I <destination>
+If this argument is given, missing symlinks will be created in this directory and subdirectory pointing to the \fI<source>\fR.
+If one opens files under this directory that actually reside in \fI<source>\fR, then the file is copied.
+
+
+.SH EXAMPLE
+
+.SH SEE ALSO
+.BR symlink (7)
+.BR chroot (1)
+.BR fanotify (7)
+
+
