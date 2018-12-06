@@ -21,92 +21,154 @@ void print_usage(char *progname) {
          "	-f <record file>    record all encountered accessed to that file\n"
          "	-d                  after initialization, start daemon mode\n"
          "	-v                  increase verbosity\n"
+         "	-s                  shorten symlinks (source inside target)\n"
+         "	-p <pid file>       record pid into that file\n"
          "	-t                  silly test option\n\n"
          "\n", progname, progname);
   exit(EXIT_SUCCESS);
 }
 
-void handle_signal(int signal){
+void handle_signal(int signal) {
   /**
-   * 
+   * actually, pulling out the hard way, let the OS do the clean-up
    */
   fprintf(stderr, "shutting down cluf\n");
   exit(EXIT_SUCCESS);
 }
 
-void cluf_exit(char *msg){
+void cluf_exit(char *msg) {
   perror(msg);
   exit(EXIT_FAILURE);
 }
 
+void record_pid(char *pidFile) {
+  fprintf(stderr,"pid=%d\n",getpid());
+  FILE *f=fopen(pidFile,"w");
+  if(!f)
+    cluf_exit("file couldn't be opened");
+  fprintf(f,"%d",getpid());
+  fclose(f);
+}
+
+void * startUpdatingSymlinks(void *dummy){
+  if(_cluf.debug>3){
+    fprintf(stderr,"start updating symlinks\n");
+  }
+  dev_t device;
+  {
+    struct stat statbuf;
+    if(lstat(_cluf.targetName,&statbuf))
+      cluf_exit("lstat on the target failed");
+    device=statbuf.st_dev;
+  }
+  cluf_updateSymlinks(_cluf.targetName,device);
+  return NULL;
+}
+
+
+
 int main(int argc, char **argv) {
-    /**
-     *
-     */
-    // initializing the global structure
-    memset(&_cluf,0,sizeof(_cluf));
+  /**
+   *
+   */
+  // initializing the global structure
+  memset(&_cluf,0,sizeof(_cluf));
 // *************************
-    if (argc <= 1) {
+  if (argc <= 1) {
+    print_usage(argv[0]);
+  }
+  char *srcDir = NULL;
+  int daemonMode = 0;
+  char *recFile = NULL;
+  {
+    int opt;
+    while ((opt = getopt(argc, argv, "dtsvp:f:")) != -1) {
+      switch (opt) {
+      case 'd':
+        daemonMode = 1;
+        if(_cluf.debug>0)
+          fprintf(stderr,"setting debug mode\n");
+        break;
+      case 't':
+        fprintf(stderr, "testing options\n");
+        break;
+      case 's':
+        fprintf(stderr, "turning to short links (source inside target)\n");
+        _cluf.shortenLinks=true;
+        break;
+      case 'v':
+        ++_cluf.debug;
+        fprintf(stderr,"setting verbose to %d\n",_cluf.debug);
+        break;
+      case 'f':
+        recFile = optarg;
+        if(_cluf.debug>0)
+          fprintf(stderr,"setting recording file to %s\n",recFile);
+        break;
+      case 'p':
+        record_pid(optarg);
+        break;
+      default:
         print_usage(argv[0]);
+      }
     }
-    char *srcDir = NULL;
-    int daemonMode = 0;
-    char *recFile = NULL;
-    {
-        int opt;
-        while ((opt = getopt(argc, argv, "dtvf:")) != -1) {
-            switch (opt) {
-            case 'd':
-                daemonMode = 1;
-                if(_cluf.debug>0)
-                  fprintf(stderr,"setting debug mode\n");
-                break;
-            case 't':
-                fprintf(stderr, "testing options\n");
-                break;
-            case 'v':
-                ++_cluf.debug;
-                fprintf(stderr,"setting verbose to %d\n",_cluf.debug);
-                break;
-            case 'f':
-                recFile = optarg;
-                if(_cluf.debug>0)
-                  fprintf(stderr,"setting recording file to %s\n",recFile);
-                break;
-            default:
-                print_usage(argv[0]);
-            }
-        }
-        char * runArg[argc];
-        for (int i = 0; i < argc; ++i)
-            runArg[i] = NULL;
-        for (int i = optind, j = 0; i < argc; ++i, ++j) {
-            if(_cluf.debug>3)
-                fprintf(stderr, "argv[%d]=%s\n", i, argv[i]);
-            runArg[j] = argv[i];
-        }
-        if (argc > 1)
-            _cluf.sourceName = runArg[0];
-        if (argc > 2)
-            _cluf.targetName = runArg[1];
+    char * runArg[argc];
+    for (int i = 0; i < argc; ++i)
+      runArg[i] = NULL;
+    for (int i = optind, j = 0; i < argc; ++i, ++j) {
+      if(_cluf.debug>3)
+        fprintf(stderr, "argv[%d]=%s\n", i, argv[i]);
+      runArg[j] = argv[i];
     }
+    if (argc > 1)
+      _cluf.sourceName = runArg[0];
+    if (argc > 2)
+      _cluf.targetName = runArg[1];
+  }
 // *************************
 // add signal handler
-    signal(SIGTERM, handle_signal);
-    signal(SIGQUIT,handle_signal);
+  signal(SIGTERM, handle_signal);
+  signal(SIGQUIT,handle_signal);
 // *************************
-    cluf_setup(recFile);
+  cluf_setup(recFile);
+  if(_cluf.debug>2)
+    fprintf(stderr,"doen with setup\n");
 // *************************
-    if (daemonMode) {
-        if (fork()) {
-            if(_cluf.debug>0)
-                fprintf(stderr, "daemon started\n");
-            exit(EXIT_SUCCESS);
-        }
+  if (daemonMode) {
+    if (fork()) {
+      if(_cluf.debug>0)
+        fprintf(stderr, "daemon started\n");
+      exit(EXIT_SUCCESS);
     }
+  }
 // *************************
-    handle_events();
-    if(_cluf.debug>0)
-        printf("all done\n");
-    exit(EXIT_SUCCESS);
+  if(_cluf.targetName){
+    if(_cluf.debug>2){
+      const size_t myStackSize=16*1024*1024; // 16 MByte
+      fprintf(stderr,"starting symlink updating thread\n");
+      pthread_t bgUpdateSymlink;
+       pthread_attr_t attr;
+       if(pthread_attr_init(&attr)){
+         cluf_exit("thread initialization");
+       }
+      size_t stacksize;
+      if(pthread_attr_getstacksize(&attr,&stacksize)){
+        cluf_exit("getting stacksize failed");
+      }
+      if(stacksize < myStackSize){
+        if(_cluf.debug>3)
+          fprintf(stderr," increasing stack from %ld to %ld\n",stacksize,myStackSize);
+          if(pthread_attr_setstacksize(&attr,myStackSize))
+            cluf_exit("setting stack size");
+      }
+      if(pthread_create(&bgUpdateSymlink,&attr,startUpdatingSymlinks,NULL))
+        cluf_exit("creating background symlink thread");
+    }
+  }
+  cluf_handle_events();
+  // ***** should not arrive here *****
+  // the signal handler has an exit
+  if(_cluf.debug>0)
+    printf("all done\n");
+  exit(EXIT_SUCCESS);
 }

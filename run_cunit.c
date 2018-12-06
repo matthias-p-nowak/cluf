@@ -1,7 +1,6 @@
 /**
- * \file
- * \author Matthias P. Nowak
- * \date 2018-04-19
+ * @author Matthias P. Nowak
+ * @date 2018-04-19
  * A general cunit file, containing a main function and can run the cunit tests in different modes.
  */
 
@@ -33,24 +32,26 @@ CU_pSuite pSuite = NULL;
 
 void run_cunit_suite(char *name, int (*init)(),int(*clean)()) {
   /**
-   * register a new suite
+   * registers a new suite
    */
   pSuite = CU_add_suite (name, init, clean);
   if (NULL == pSuite)
   {
     perror("Test suite registration failed");
+    fprintf(stderr,"suite %s not registered\n",name);
   }
   return;
 }
 
 void reg_cunit_test(char *name, void (*funct)()) {
   /**
-   * register a new suite
+   * registers a new test
    */
   if(!pSuite) {
     // make sure that at least one suite was registered
     perror("no test suite registered\n");
-    exit(EXIT_FAILURE);
+    fprintf(stderr,"test %s not registered\n",name);
+    return;
   }
   if(!CU_add_test(pSuite,name, funct)) {
     fprintf(stderr,"adding %s failed with %d\n",name,CU_get_error());
@@ -58,9 +59,6 @@ void reg_cunit_test(char *name, void (*funct)()) {
   }
 }
 
-/**
- *
- */
 void
 print_usage (char *progName) {
   printf ("use %s -i for interactive testing\n", progName);
@@ -125,10 +123,10 @@ main (int argc, char **argv)
     printf ("automated test, results are in Test-Results.xml\n");
     CU_set_output_filename ("Test");
     CU_automated_run_tests ();
-    // CU_list_tests_to_file ();
+    CU_list_tests_to_file ();
   }
   int ret=0;
-  fprintf(stderr,"numbers of failed tests: %d\n", ret=CU_get_number_of_tests_failed());
+  printf("numbers of failed tests: %d\n", ret=CU_get_number_of_tests_failed());
   CU_cleanup_registry ();
   return ret;
 }

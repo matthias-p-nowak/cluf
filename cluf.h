@@ -1,10 +1,9 @@
-
-/*
- * cluf.h
- *
- *  Created on: Nov 20, 2018
- *      Author: me
+/**
+ * @author Matthias P. Nowak
+ * @copyright LGPL 3.0 https://opensource.org/licenses/lgpl-3.0.html
+ * can be precompiled
  */
+
 
 #ifndef CLUF_H_
 #define CLUF_H_
@@ -16,6 +15,7 @@
 #include <fcntl.h>
 #include <limits.h>
 #include <linux/fs.h> // for RENAME_EXCHANGE
+#include <pthread.h>
 #include <signal.h>
 #include <stdbool.h>
 #include <stdio.h>
@@ -25,19 +25,27 @@
 #include <sys/stat.h>
 #include <sys/syscall.h>
 #include <sys/types.h>
+#include <time.h>
 #include <unistd.h>
 
 
-int cluf_same(int fd1, int fd2);
-void cluf_copyFile(char* dest, int fd);
-void cluf_setup(char* recFile);
-void cluf_setup_1();
-void cluf_symlink(char *srcDir);
-int cluf_source2target(char *in, char *out);
-int cluf_target2source(char *in, char *out);
+/*
+ * documentation to the function is in the corresponding files
+ */
+
+bool cluf_same(int fd1, int fd2);
+int cluf_source2shortened2(char *in, char *entry, char *out);
 int cluf_source2shortened(char *in, char *out);
-void handle_events();
+int cluf_source2target(char *in, char *out, int *len);
+int cluf_target2sourceShortened(char *in, char *entry, char *out);
+int cluf_target2source(char *in, char *out);
+void cluf_copyFile(char* dest, int fd);
 void cluf_exit(char *msg);
+void cluf_makeSymlinks(char *srcDir);
+void cluf_setup_1();
+void cluf_setup(char* recFile);
+void cluf_handle_events();
+void cluf_updateSymlinks(char *target,dev_t device);
 
 
 
@@ -45,13 +53,12 @@ struct cluf_global {
     int debug; // increased verbosity
     int fanotifyFD; // file descriptor for fanotify 
     FILE *fanotifyFile; // for recording opened files
-    int srcLen; // length of sourcefile mount point
-    char *destDir; // path to destination
     char *sourceName; // source name where the proper files are
-    int sourceLen;
+    int sourceLen; // length of sourcefile mount point
     char *targetName; // place to put symlinks and opened proper files
     int targetLen;
     bool shortenLinks; // indicate a use in a chrooted environment
+    time_t startTime;
 };
 
 extern struct cluf_global _cluf;

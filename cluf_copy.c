@@ -1,11 +1,17 @@
 /**
+ * @author Matthias P. Nowak
+ * @copyright LGPL 3.0 https://opensource.org/licenses/lgpl-3.0.html
  */
 
 #include "cluf.h"
-#define BUFMAX 1024*1024  
+#define BUFMAX 1024*1024
 
 void cluf_createDir(char *destPath,char *srcPath) {
+  /**
+   *
+   */
   char tmpDir[PATH_MAX];
+  // making a template for the temporary directory
   snprintf(tmpDir,PATH_MAX,"%sXXXXXX",destPath);
   if(!mkdtemp(tmpDir)) {
     // is also creates the directory!
@@ -20,7 +26,8 @@ void cluf_createDir(char *destPath,char *srcPath) {
   }
   DIR *srcDir=opendir(srcPath);
   if(!srcDir) {
-    cluf_exit("opening src dir for symlinks");
+    snprintf(tmpDir,PATH_MAX,"opening src dir '%s' for symlinks",srcPath);
+    cluf_exit(tmpDir);
   }
   struct dirent *dirent;
   char linkPath[PATH_MAX];
@@ -29,7 +36,8 @@ void cluf_createDir(char *destPath,char *srcPath) {
       continue;
     if(_cluf.debug>6)
       fprintf(stderr,"making symlink for %s\n",dirent->d_name);
-    snprintf(linkPath,PATH_MAX,"%s/%s",srcPath,dirent->d_name);
+    // snprintf(linkPath,PATH_MAX,"%s/%s",srcPath,dirent->d_name);
+    cluf_source2shortened2(srcPath,dirent->d_name,linkPath);
     if(symlinkat(linkPath,destFd,dirent->d_name)) {
       perror(linkPath);
     }
@@ -61,30 +69,40 @@ void cluf_createDir(char *destPath,char *srcPath) {
   }
 }
 
-void cluf_copyFile(char* source, int fd) {
-  char destPath[PATH_MAX];
+void cluf_copyFile(char* sourceFilePath, int fd) {
+  /**
+   * function copies the file that was used
+   */
+  char targetPath[PATH_MAX];
   char srcPath[PATH_MAX];
-  int destLen=snprintf(destPath,PATH_MAX,"%s%s",_cluf.destDir,source+_cluf.srcLen);
+  // we need the path that is visible to this program, not the one for symlinks
+  int destLen;
+  cluf_source2target(sourceFilePath,targetPath,&destLen);
   if(_cluf.debug>2)
-    fprintf(stderr,"copying to %s\n",destPath);
+    fprintf(stderr,"copying to %s\n",targetPath);
   // have to check immediate directories, shouldn't be symbolic
-  int corr=_cluf.srcLen-strlen(_cluf.destDir);
-  for(int i=_cluf.srcLen+1; i<destLen; ++i) {
-    if(destPath[i]=='/') {
-      destPath[i]='\0';
-      if(_cluf.debug>3)
-        fprintf(stderr,"testing %s\n",destPath);
+  int corr=_cluf.sourceLen-_cluf.targetLen;
+  if(_cluf.debug>7)
+    fprintf(stderr,"checking for symlinked dirs in %s\n",targetPath+_cluf.targetLen);
+  for(int i=_cluf.targetLen; i<destLen; ++i) {
+    if(targetPath[i]=='/') {
+      targetPath[i]='\0';
+      if(_cluf.debug>5)
+        fprintf(stderr,"testing %s\n",targetPath);
       struct stat sb;
-      if(lstat(destPath,&sb)) {
+      if(lstat(targetPath,&sb)) {
         cluf_exit("testing directory for being a symbolic link");
       }
       if(S_ISLNK(sb.st_mode)) {
-        strncpy(srcPath,source,i-corr);
-        if(_cluf.debug>3)
-          fprintf(stderr,"replace %s <- %s\n",destPath,srcPath);
-        cluf_createDir(destPath,srcPath);
+        strncpy(srcPath,sourceFilePath,i+corr);
+        srcPath[i+corr]='\0';
+        if(_cluf.debug>3) {
+          fprintf(stderr,"sfp=%s i=%d, corr=%d\n",sourceFilePath,i,corr);
+          fprintf(stderr,"replace %s <- %s\n",targetPath,srcPath);
+        }
+        cluf_createDir(targetPath,srcPath);
       }
-      destPath[i]='/';
+      targetPath[i]='/';
     }
   }
   struct stat sb;
@@ -92,24 +110,29 @@ void cluf_copyFile(char* source, int fd) {
   {
     cluf_exit("can't stat the source file");
   }
-  snprintf(srcPath,PATH_MAX,"%sXXXXXX",destPath);
+  snprintf(srcPath,PATH_MAX,"%sXXXXXX",targetPath);
   int fd2=mkstemp(srcPath);
+  if(_cluf.debug>3){
+    fprintf(stderr,"the tmp file is %s\n",srcPath);
+  }
+  if(fd2 <= 0)
+    cluf_exit("opening target tmp file went wrong");
   char buf[BUFMAX];
   ssize_t rr,rw;
-  while(0< ( rr=read(fd,buf,BUFMAX))){
+  while(0< ( rr=read(fd,buf,BUFMAX))) {
     rw=write(fd2,buf,rr);
-    if(rw != rr){
+    if(rw != rr) {
       cluf_exit("file copying");
     }
   }
   close(fd2);
-  if(chown(srcPath,sb.st_uid,sb.st_gid)){
+  if(chown(srcPath,sb.st_uid,sb.st_gid)) {
     cluf_exit("changin owner");
   }
-  if(chmod(srcPath,sb.st_mode)){
+  if(chmod(srcPath,sb.st_mode)) {
     cluf_exit("changing file mode");
   }
-  if(rename(srcPath,destPath)){
+  if(rename(srcPath,targetPath)) {
     cluf_exit("error in final file symlink rename");
   }
 }
