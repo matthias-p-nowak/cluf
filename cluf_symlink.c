@@ -53,7 +53,12 @@ void cluf_makeSymlinks(char *sourceDirName) {
   closedir(sourceDir);
 }
 
-void cluf_updateSymlinks(char *target) {
+void cluf_updateSymlinks(char *target, dev_t device) {
+  if(strstr(target,_cluf.sourceName)){
+    if(_cluf.debug>3)
+      fprintf(stderr,"%s is in %s, stopping\n",target,_cluf.sourceName);
+    return;
+  }
   char sourcePath[PATH_MAX];
   if(_cluf.debug>5)
     fprintf(stderr, "updating symlinks in %s\n",target);
@@ -89,7 +94,8 @@ void cluf_updateSymlinks(char *target) {
             continue;
         }
         if(S_ISDIR(statbuf.st_mode)){
-          cluf_updateSymlinks(newDir);
+          if(statbuf.st_dev == device)
+            cluf_updateSymlinks(newDir,device);
         }
       }else{
         perror(sourcePath);

@@ -21,6 +21,7 @@ void print_usage(char *progname) {
          "	-f <record file>    record all encountered accessed to that file\n"
          "	-d                  after initialization, start daemon mode\n"
          "	-v                  increase verbosity\n"
+         "	-s                  shorten symlinks (source inside target)\n"
          "	-p <pid file>       record pid into that file\n"
          "	-t                  silly test option\n\n"
          "\n", progname, progname);
@@ -53,7 +54,14 @@ void * startUpdatingSymlinks(void *dummy){
   if(_cluf.debug>3){
     fprintf(stderr,"start updating symlinks\n");
   }
-  cluf_updateSymlinks(_cluf.targetName);
+  dev_t device;
+  {
+    struct stat statbuf;
+    if(lstat(_cluf.targetName,&statbuf))
+      cluf_exit("lstat on the target failed");
+    device=statbuf.st_dev;
+  }
+  cluf_updateSymlinks(_cluf.targetName,device);
   return NULL;
 }
 
@@ -74,7 +82,7 @@ int main(int argc, char **argv) {
   char *recFile = NULL;
   {
     int opt;
-    while ((opt = getopt(argc, argv, "dtvp:f:")) != -1) {
+    while ((opt = getopt(argc, argv, "dtsvp:f:")) != -1) {
       switch (opt) {
       case 'd':
         daemonMode = 1;
@@ -83,6 +91,10 @@ int main(int argc, char **argv) {
         break;
       case 't':
         fprintf(stderr, "testing options\n");
+        break;
+      case 's':
+        fprintf(stderr, "turning to short links (source inside target)\n");
+        _cluf.shortenLinks=true;
         break;
       case 'v':
         ++_cluf.debug;
@@ -119,6 +131,8 @@ int main(int argc, char **argv) {
   signal(SIGQUIT,handle_signal);
 // *************************
   cluf_setup(recFile);
+  if(_cluf.debug>2)
+    fprintf(stderr,"doen with setup\n");
 // *************************
   if (daemonMode) {
     if (fork()) {

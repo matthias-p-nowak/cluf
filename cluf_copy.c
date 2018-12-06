@@ -78,12 +78,13 @@ void cluf_copyFile(char* sourceFilePath, int fd) {
   // we need the path that is visible to this program, not the one for symlinks
   int destLen;
   cluf_source2target(sourceFilePath,targetPath,&destLen);
-  // int destLen=snprintf(targetPath,PATH_MAX,"%s%s",_cluf.destDir,sourceFilePath+_cluf.srcLen);
   if(_cluf.debug>2)
     fprintf(stderr,"copying to %s\n",targetPath);
   // have to check immediate directories, shouldn't be symbolic
   int corr=_cluf.sourceLen-_cluf.targetLen;
-  for(int i=_cluf.sourceLen+1; i<destLen; ++i) {
+  if(_cluf.debug>7)
+    fprintf(stderr,"checking for symlinked dirs in %s\n",targetPath+_cluf.targetLen);
+  for(int i=_cluf.targetLen; i<destLen; ++i) {
     if(targetPath[i]=='/') {
       targetPath[i]='\0';
       if(_cluf.debug>5)
@@ -98,7 +99,6 @@ void cluf_copyFile(char* sourceFilePath, int fd) {
         if(_cluf.debug>3) {
           fprintf(stderr,"sfp=%s i=%d, corr=%d\n",sourceFilePath,i,corr);
           fprintf(stderr,"replace %s <- %s\n",targetPath,srcPath);
-
         }
         cluf_createDir(targetPath,srcPath);
       }
@@ -112,6 +112,11 @@ void cluf_copyFile(char* sourceFilePath, int fd) {
   }
   snprintf(srcPath,PATH_MAX,"%sXXXXXX",targetPath);
   int fd2=mkstemp(srcPath);
+  if(_cluf.debug>3){
+    fprintf(stderr,"the tmp file is %s\n",srcPath);
+  }
+  if(fd2 <= 0)
+    cluf_exit("opening target tmp file went wrong");
   char buf[BUFMAX];
   ssize_t rr,rw;
   while(0< ( rr=read(fd,buf,BUFMAX))) {

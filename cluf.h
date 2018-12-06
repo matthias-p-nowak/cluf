@@ -45,7 +45,7 @@ void cluf_makeSymlinks(char *srcDir);
 void cluf_setup_1();
 void cluf_setup(char* recFile);
 void cluf_handle_events();
-void cluf_updateSymlinks(char *target);
+void cluf_updateSymlinks(char *target,dev_t device);
 
 
 

@@ -28,16 +28,15 @@ long_line_behaviour=1
 long_line_column=72
 
 [files]
-current_page=1
-FILE_NAME_0=5749;C;0;EUTF-8;0;1;0;%2Fhome%2Fme%2Fprojects%2Fcluf%2Ftest_strings.c;0;2
-FILE_NAME_1=2652;C;0;EUTF-8;0;1;0;%2Fhome%2Fme%2Fprojects%2Fcluf%2Fcluf_strings.c;0;2
-FILE_NAME_2=893;C++;0;EUTF-8;0;1;0;%2Fhome%2Fme%2Fprojects%2Fcluf%2Fcluf.h;0;2
+current_page=4
+FILE_NAME_0=8465;C;0;EUTF-8;0;1;0;%2Fhome%2Fme%2Fprojects%2Fcluf%2Ftest_strings.c;0;2
+FILE_NAME_1=3091;C;0;EUTF-8;0;1;0;%2Fhome%2Fme%2Fprojects%2Fcluf%2Fcluf_strings.c;0;2
+FILE_NAME_2=945;C++;0;EUTF-8;0;1;0;%2Fhome%2Fme%2Fprojects%2Fcluf%2Fcluf.h;0;2
 FILE_NAME_3=435;C;0;EUTF-8;0;1;0;%2Fhome%2Fme%2Fprojects%2Fcluf%2Fcluf_setup.c;0;2
-FILE_NAME_4=1651;C;0;EUTF-8;0;1;0;%2Fhome%2Fme%2Fprojects%2Fcluf%2Fcluf_symlink.c;0;2
-FILE_NAME_5=0;C;0;EUTF-8;0;1;0;%2Fhome%2Fme%2Fprojects%2Fcluf%2Fcluf_aux.c;0;2
-FILE_NAME_6=1913;C;0;EUTF-8;0;1;0;%2Fhome%2Fme%2Fprojects%2Fcluf%2Fcluf_copy.c;0;2
-FILE_NAME_7=4254;C;0;EUTF-8;0;1;0;%2Fhome%2Fme%2Fprojects%2Fcluf%2Fcluf_events.c;0;2
-FILE_NAME_8=1418;C;0;EUTF-8;0;1;0;%2Fhome%2Fme%2Fprojects%2Fcluf%2Fcluf_main.c;0;2
+FILE_NAME_4=3313;C;0;EUTF-8;0;1;0;%2Fhome%2Fme%2Fprojects%2Fcluf%2Fcluf_copy.c;0;2
+FILE_NAME_5=4158;C;0;EUTF-8;0;1;0;%2Fhome%2Fme%2Fprojects%2Fcluf%2Fcluf_events.c;0;2
+FILE_NAME_6=1418;C;0;EUTF-8;0;1;0;%2Fhome%2Fme%2Fprojects%2Fcluf%2Fcluf_main.c;0;2
+FILE_NAME_7=704;Make;0;EUTF-8;1;1;0;%2Fhome%2Fme%2Fprojects%2Fcluf%2Fmakefile;0;2
 
 [VTE]
 last_dir=/home/me/projects/cluf
@@ -84,17 +83,17 @@ break_3_condition=
 break_3_hits_count=0
 break_3_enabled=true
 break_4_file=/home/me/projects/cluf/cluf_main.c
-break_4_line=72
+break_4_line=80
 break_4_condition=
 break_4_hits_count=0
 break_4_enabled=true
 break_5_file=/home/me/projects/cluf/cluf_main.c
-break_5_line=121
+break_5_line=135
 break_5_condition=
 break_5_hits_count=0
 break_5_enabled=true
 break_6_file=/home/me/projects/cluf/cluf_main.c
-break_6_line=154
+break_6_line=168
 break_6_condition=
 break_6_hits_count=0
 break_6_enabled=true
