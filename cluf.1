@@ -1,4 +1,4 @@
-.TH cluf 1 "2018-12-06" "Matthias P. Nowak"
+.TH cluf 1 "2018-12-09" "Matthias P. Nowak"
 .SH NAME
 cluf \- copying used files and maintain symbolic links based on a source directory
 .SH SYNOPSIS
@@ -49,7 +49,29 @@ If this argument is given, missing symlinks will be created in this directory an
 If one opens files under this directory that actually reside in \fI<source>\fR, then the file is copied.
 
 
-.SH EXAMPLE
+.SH EXAMPLES
+.SS Recording example
+
+.TP
+cluf -f /tmp/opened-files /ramdisk
+Assuming that a ramdisk is mounted at \fI/ramdisk\fR, we are trying to find out which files are actually opened. \
+The command above records those files in \fI/tmp/opened-files\fR, and it can be used by programs like \fBcpio\fR to create a smaller ramdisk.
+
+.SS Copying example 
+.TP
+cluf -sd /newRoot/bigDisk  /newRoot
+A new system is mounted under \fI/newRoot\fR. This is the system that will be populated with the necessary files.
+Moreover, we will carry out a \fBchroot\fR into that system and work with the programs we want to use later on that system.
+The program might be started from an initial ramdisk, where not much of terminal control is established. 
+Hence, we use \fI-d\fR in order to send the program into the background. Options without an argument can be combined.
+
+The \fI-s\fR indicates that the created symbolic links will be shortened.
+For instance, a link to \fI/newRoot/bigDisk/etc/passwd\fR would be created 
+under \fI/newRoot/etc\fR as \fIpasswd\fR pointing to \fI/bigDisk/etc/passwd\fR.
+
+The system will be populated with all opened files as long as the program \fIcluf\fR runs.
+The program can be terminated using \fBkill\fR.
+
 
 .SH SEE ALSO
 .BR symlink (7)
